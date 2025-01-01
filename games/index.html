@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Explore and purchase exciting games: Word Search Puzzles, Board Games, and more!">
     <title>MaximumRaw GameHub | Play & Shop</title>
-    <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         /* Basic Reset */
@@ -91,11 +90,17 @@
             margin: 10px;
         }
 
-        .hero .qr-code img {
+        .hero .qr-code a img {
             width: 180px;
             height: auto;
             border: 2px solid #0078FF;
             border-radius: 10px;
+        }
+
+        .hero .qr-code p {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #0078FF;
         }
 
         /* Games Section */
@@ -249,8 +254,10 @@
             <p>Explore the best games, from puzzles to board games, and play directly from your device after scanning the QR code below.</p>
         </div>
         <div class="qr-code">
-            <img src="qr-code-placeholder.png" alt="Scan QR Code">
-            <p>Scan this QR code to visit GameHub Members anytime!</p>
+            <a href="https://www.maximumraw.com/games/#" target="_blank">
+                <img src="qr-code.png" alt="Scan QR Code">
+            </a>
+            <p>Scan this QR code or click to visit GameHub Mambers!</p>
         </div>
     </section>
 
