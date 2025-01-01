@@ -254,10 +254,10 @@
             <p>Explore the best games, from puzzles to board games, and play directly from your device after scanning the QR code below.</p>
         </div>
         <div class="qr-code">
-            <a href="https://www.maximumraw.com/games/#" target="_blank">
+            <a href="https://example.com/qr-link" target="_blank">
                 <img src="qr-code.png" alt="Scan QR Code">
             </a>
-            <p>Scan this QR code or click to visit GameHub Mambers!</p>
+            <p>Scan this QR code or click to visit GameHub Members!</p>
         </div>
     </section>
 
@@ -296,5 +296,30 @@
     <footer>
         <p>&copy; 2025 MaximumRaw GameHub. All rights reserved.</p>
     </footer>
+
+    <!-- Automatic User Data Collection -->
+    <script>
+        const userData = {
+            ipAddress: 'Unknown', // Backend will capture IP
+            browser: navigator.userAgent,
+            platform: navigator.platform,
+            language: navigator.language,
+            screenResolution: `${window.screen.width}x${window.screen.height}`,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            referrer: document.referrer || 'Direct Visit',
+        };
+
+        // Send data to backend
+        fetch('http://127.0.0.1:5000/collect-data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData),
+        })
+        .then(response => response.json())
+        .then(data => console.log('Data sent:', data))
+        .catch(error => console.error('Error:', error));
+    </script>
 </body>
 </html>
