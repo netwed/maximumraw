@@ -11,7 +11,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            margin: 0;
+            margin: 20px;
             padding: 0;
             background-color: #f4f4f9;
             color: #333;
@@ -27,6 +27,10 @@
             grid-template-columns: repeat(20, 30px);
             gap: 2px;
             margin-top: 20px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .cell {
@@ -37,17 +41,22 @@
             border: 1px solid #ccc;
             background-color: #fff;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 16px;
+            user-select: none;
         }
 
         .word-list {
             margin-top: 20px;
             text-align: left;
+            max-width: 600px;
         }
 
         .word {
             font-size: 16px;
             color: #4a4a4a;
+            margin: 5px 0;
+            display: inline-block;
+            width: 150px;
         }
     </style>
 </head>
@@ -56,7 +65,7 @@
     <div class="grid" id="grid"></div>
     <div class="word-list">
         <h3>Find These Words:</h3>
-        <ul id="words"></ul>
+        <div id="words"></div>
     </div>
 
     <script>
@@ -71,63 +80,90 @@
             "VULNERABILITY", "FORENSICS", "ACCESS", "CONTROL", "PROTECTION"
         ];
 
-        const gridElement = document.getElementById("grid");
-        const wordsElement = document.getElementById("words");
-
         function createGrid() {
-            const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            const gridData = Array.from({ length: gridSize }, () => 
-                Array.from({ length: gridSize }, () => letters.charAt(Math.floor(Math.random() * letters.length)))
-            );
-
-            words.forEach(word => {
-                let placed = false;
-                while (!placed) {
-                    const row = Math.floor(Math.random() * gridSize);
-                    const col = Math.floor(Math.random() * gridSize);
-                    const direction = Math.random() > 0.5 ? 1 : -1;
-
-                    if (col + word.length * direction >= 0 && col + word.length * direction < gridSize) {
-                        let canPlace = true;
-                        for (let i = 0; i < word.length; i++) {
-                            const targetCol = col + i * direction;
-                            if (gridData[row][targetCol] !== letters.charAt(Math.floor(Math.random() * letters.length))) {
-                                canPlace = false;
-                                break;
-                            }
-                        }
-                        if (canPlace) {
-                            for (let i = 0; i < word.length; i++) {
-                                const targetCol = col + i * direction;
-                                gridData[row][targetCol] = word[i];
-                            }
-                            placed = true;
-                        }
+            const grid = Array(gridSize).fill().map(() => Array(gridSize).fill(''));
+            
+            // Helper function to check if a word can be placed at a specific position
+            function canPlaceWord(word, row, col, rowDir, colDir) {
+                for (let i = 0; i < word.length; i++) {
+                    const newRow = row + i * rowDir;
+                    const newCol = col + i * colDir;
+                    
+                    if (newRow < 0 || newRow >= gridSize || newCol < 0 || newCol >= gridSize) {
+                        return false;
+                    }
+                    
+                    if (grid[newRow][newCol] !== '' && grid[newRow][newCol] !== word[i]) {
+                        return false;
                     }
                 }
-            });
+                return true;
+            }
 
-            return gridData;
+            // Place words in random directions
+            for (const word of words) {
+                let placed = false;
+                let attempts = 0;
+                
+                while (!placed && attempts < 100) {
+                    const directions = [
+                        [0, 1],   // horizontal
+                        [1, 0],   // vertical
+                        [1, 1],   // diagonal down
+                        [-1, 1],  // diagonal up
+                    ];
+                    
+                    const direction = directions[Math.floor(Math.random() * directions.length)];
+                    const row = Math.floor(Math.random() * gridSize);
+                    const col = Math.floor(Math.random() * gridSize);
+                    
+                    if (canPlaceWord(word, row, col, direction[0], direction[1])) {
+                        for (let i = 0; i < word.length; i++) {
+                            grid[row + i * direction[0]][col + i * direction[1]] = word[i];
+                        }
+                        placed = true;
+                    }
+                    
+                    attempts++;
+                }
+            }
+
+            // Fill empty spaces with random letters
+            const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    if (grid[i][j] === '') {
+                        grid[i][j] = letters.charAt(Math.floor(Math.random() * letters.length));
+                    }
+                }
+            }
+            
+            return grid;
         }
 
         function renderGrid(gridData) {
+            const gridElement = document.getElementById("grid");
             gridElement.innerHTML = "";
-            gridData.forEach(row => {
-                row.forEach(letter => {
+            
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
                     const cell = document.createElement("div");
                     cell.className = "cell";
-                    cell.textContent = letter;
+                    cell.textContent = gridData[i][j];
                     gridElement.appendChild(cell);
-                });
-            });
+                }
+            }
         }
 
         function renderWords() {
-            words.forEach(word => {
-                const li = document.createElement("li");
-                li.className = "word";
-                li.textContent = word;
-                wordsElement.appendChild(li);
+            const wordsElement = document.getElementById("words");
+            wordsElement.innerHTML = "";
+            
+            words.sort().forEach(word => {
+                const span = document.createElement("span");
+                span.className = "word";
+                span.textContent = word;
+                wordsElement.appendChild(span);
             });
         }
 
