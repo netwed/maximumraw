@@ -15,48 +15,85 @@
             padding: 0;
             background-color: #f4f4f9;
             color: #333;
+            touch-action: manipulation;
         }
 
         h1 {
             margin-bottom: 10px;
             color: #4a90e2;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            text-align: center;
         }
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(20, 30px);
-            gap: 2px;
-            margin-top: 20px;
+            grid-template-columns: repeat(20, minmax(20px, 30px));
+            gap: 1px;
+            margin: 10px;
             background-color: white;
             padding: 10px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 100%;
+            overflow-x: auto;
         }
 
         .cell {
-            width: 30px;
-            height: 30px;
+            width: 100%;
+            aspect-ratio: 1;
             text-align: center;
-            line-height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             border: 1px solid #ccc;
             background-color: #fff;
             font-weight: bold;
-            font-size: 16px;
-            user-select: none;
+            font-size: clamp(12px, 3vw, 16px);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .cell.selected {
+            background-color: #e6f3ff;
+            color: #4a90e2;
+        }
+
+        .cell.found {
+            background-color: #d4edda;
+            color: #28a745;
         }
 
         .word-list {
             margin-top: 20px;
             text-align: left;
-            max-width: 600px;
+            max-width: 100%;
+            padding: 0 20px;
         }
 
         .word {
             font-size: 16px;
             color: #4a4a4a;
-            margin: 5px 0;
+            margin: 5px;
             display: inline-block;
             width: 150px;
+        }
+
+        .word.found {
+            color: #28a745;
+            text-decoration: line-through;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: repeat(20, minmax(15px, 25px));
+                gap: 1px;
+                padding: 5px;
+            }
+
+            .word {
+                width: 120px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
@@ -80,10 +117,13 @@
             "VULNERABILITY", "FORENSICS", "ACCESS", "CONTROL", "PROTECTION"
         ];
 
+        let selectedCells = [];
+        let foundWords = new Set();
+        let isSelecting = false;
+
         function createGrid() {
             const grid = Array(gridSize).fill().map(() => Array(gridSize).fill(''));
             
-            // Helper function to check if a word can be placed at a specific position
             function canPlaceWord(word, row, col, rowDir, colDir) {
                 for (let i = 0; i < word.length; i++) {
                     const newRow = row + i * rowDir;
@@ -100,7 +140,6 @@
                 return true;
             }
 
-            // Place words in random directions
             for (const word of words) {
                 let placed = false;
                 let attempts = 0;
@@ -128,7 +167,6 @@
                 }
             }
 
-            // Fill empty spaces with random letters
             const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             for (let i = 0; i < gridSize; i++) {
                 for (let j = 0; j < gridSize; j++) {
@@ -141,6 +179,37 @@
             return grid;
         }
 
+        function getSelectedWord() {
+            return selectedCells.map(cell => cell.textContent).join('');
+        }
+
+        function checkWord() {
+            const selectedWord = getSelectedWord();
+            const reverseWord = selectedWord.split('').reverse().join('');
+            
+            if (words.includes(selectedWord) && !foundWords.has(selectedWord)) {
+                foundWords.add(selectedWord);
+                selectedCells.forEach(cell => cell.classList.add('found'));
+                updateWordList();
+                return true;
+            } else if (words.includes(reverseWord) && !foundWords.has(reverseWord)) {
+                foundWords.add(reverseWord);
+                selectedCells.forEach(cell => cell.classList.add('found'));
+                updateWordList();
+                return true;
+            }
+            return false;
+        }
+
+        function updateWordList() {
+            const wordElements = document.querySelectorAll('.word');
+            wordElements.forEach(wordEl => {
+                if (foundWords.has(wordEl.textContent)) {
+                    wordEl.classList.add('found');
+                }
+            });
+        }
+
         function renderGrid(gridData) {
             const gridElement = document.getElementById("grid");
             gridElement.innerHTML = "";
@@ -150,9 +219,55 @@
                     const cell = document.createElement("div");
                     cell.className = "cell";
                     cell.textContent = gridData[i][j];
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    
+                    cell.addEventListener('mousedown', startSelection);
+                    cell.addEventListener('mouseover', continueSelection);
+                    cell.addEventListener('touchstart', startSelection);
+                    cell.addEventListener('touchmove', handleTouchMove);
+                    
                     gridElement.appendChild(cell);
                 }
             }
+        }
+
+        function startSelection(e) {
+            e.preventDefault();
+            isSelecting = true;
+            selectedCells.forEach(cell => cell.classList.remove('selected'));
+            selectedCells = [e.target];
+            e.target.classList.add('selected');
+        }
+
+        function continueSelection(e) {
+            if (!isSelecting) return;
+            
+            if (!selectedCells.includes(e.target)) {
+                selectedCells.push(e.target);
+                e.target.classList.add('selected');
+            }
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const cell = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            if (cell && cell.classList.contains('cell') && !selectedCells.includes(cell)) {
+                selectedCells.push(cell);
+                cell.classList.add('selected');
+            }
+        }
+
+        function endSelection() {
+            if (!isSelecting) return;
+            
+            isSelecting = false;
+            if (!checkWord()) {
+                selectedCells.forEach(cell => cell.classList.remove('selected'));
+            }
+            selectedCells = [];
         }
 
         function renderWords() {
@@ -170,6 +285,9 @@
         const gridData = createGrid();
         renderGrid(gridData);
         renderWords();
+
+        document.addEventListener('mouseup', endSelection);
+        document.addEventListener('touchend', endSelection);
     </script>
 </body>
 </html>
