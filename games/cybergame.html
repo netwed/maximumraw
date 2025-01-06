@@ -5,8 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cybersecurity Word Search Puzzle</title>
     <style>
-        /* Previous styles remain the same until .cell */
-        
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        .grid {
+            display: grid;
+            margin: 20px auto;
+            width: 90vw;
+            max-width: 600px;
+            gap: 2px;
+        }
+
         .cell {
             width: 100%;
             aspect-ratio: 1;
@@ -20,7 +33,6 @@
             font-size: clamp(12px, 3vw, 16px);
             cursor: pointer;
             transition: background-color 0.2s;
-            touch-action: none;
         }
 
         .cell.selected {
@@ -31,16 +43,6 @@
         .cell.found {
             background-color: #d4edda;
             color: #28a745;
-        }
-
-        .cell.completed {
-            animation: flash 1s infinite;
-        }
-
-        @keyframes flash {
-            0% { background-color: #d4edda; }
-            50% { background-color: #28a745; }
-            100% { background-color: #d4edda; }
         }
 
         .reset-button {
@@ -59,7 +61,31 @@
             background-color: #357abd;
         }
 
-        /* Rest of the previous styles remain the same */
+        .word-list {
+            text-align: center;
+            margin: 20px;
+        }
+
+        .word-list h3 {
+            margin: 0 0 10px;
+        }
+
+        .word-list div {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .word-list div span {
+            margin: 5px 10px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .word-list div span.found {
+            color: #28a745;
+            text-decoration: line-through;
+        }
     </style>
 </head>
 <body>
@@ -73,23 +99,16 @@
 
     <script>
         const gridSize = 20;
-        const wordsPerGame = 34;
+        const wordsPerGame = 10;
         const allWords = [
             "ENCRYPTION", "FIREWALL", "HACKER", "PASSWORD", "MALWARE", 
             "PHISHING", "BACKDOOR", "VIRUS", "SECURITY", "TROJAN", 
             "SPYWARE", "KEYLOGGER", "PATCH", "AUTHENTICATION", "RANSOMWARE", 
-            "NETWORK", "BREACH", "PROTOCOL", "INTRUSION", "ZERO",
-            "HASHING", "CERTIFICATE", "SOFTWARE", "MULTIFACTOR", "EXPLOIT",
-            "PRIVACY", "BOTNET", "ATTACK", "DEFENSE", "RISK",
-            "VULNERABILITY", "FORENSICS", "ACCESS", "CONTROL", "PROTECTION"
+            "NETWORK", "BREACH", "PROTOCOL", "INTRUSION", "HASHING"
         ];
 
         let words = [];
-        let selectedCells = [];
-        let foundWords = new Set();
-        let startCell = null;
-        let isSelecting = false;
-        let gridData = null;
+        let gridData = [];
 
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
@@ -100,110 +119,93 @@
         }
 
         function selectRandomWords() {
-            const shuffledWords = shuffleArray([...allWords]);
-            return shuffledWords.slice(0, wordsPerGame);
+            return shuffleArray([...allWords]).slice(0, wordsPerGame);
         }
 
-        function isValidSelection(cell) {
-            if (!startCell || selectedCells.length < 2) return true;
-            
-            const startRow = parseInt(startCell.dataset.row);
-            const startCol = parseInt(startCell.dataset.col);
-            const currentRow = parseInt(cell.dataset.row);
-            const currentCol = parseInt(cell.dataset.col);
-            
-            // Calculate direction vector from start cell to second cell
-            const rowDir = selectedCells.length > 1 ? 
-                parseInt(selectedCells[1].dataset.row) - startRow : 
-                currentRow - startRow;
-            const colDir = selectedCells.length > 1 ? 
-                parseInt(selectedCells[1].dataset.col) - startCol : 
-                currentCol - startCol;
-            
-            // Normalize direction vector
-            const length = Math.sqrt(rowDir * rowDir + colDir * colDir);
-            const normalizedRowDir = length ? rowDir / length : 0;
-            const normalizedColDir = length ? colDir / length : 0;
-            
-            // Check if current cell follows the same direction
-            const newRowDir = currentRow - startRow;
-            const newColDir = currentCol - startCol;
-            const newLength = Math.sqrt(newRowDir * newRowDir + newColDir * newColDir);
-            
-            return Math.abs(normalizedRowDir * (newColDir / newLength) - 
-                   normalizedColDir * (newRowDir / newLength)) < 0.1;
+        function createGrid() {
+            const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const grid = Array.from({ length: gridSize }, () =>
+                Array.from({ length: gridSize }, () => letters[Math.floor(Math.random() * letters.length)])
+            );
+
+            words.forEach(word => {
+                let placed = false;
+                while (!placed) {
+                    const direction = Math.floor(Math.random() * 8);
+                    const row = Math.floor(Math.random() * gridSize);
+                    const col = Math.floor(Math.random() * gridSize);
+                    placed = placeWordInGrid(word, grid, row, col, direction);
+                }
+            });
+
+            return grid;
         }
 
-        function startSelection(e) {
-            e.preventDefault();
-            const cell = e.target.closest('.cell');
-            if (!cell) return;
-            
-            isSelecting = true;
-            startCell = cell;
-            selectedCells.forEach(cell => cell.classList.remove('selected'));
-            selectedCells = [cell];
-            cell.classList.add('selected');
-        }
+        function placeWordInGrid(word, grid, row, col, direction) {
+            const directions = [
+                [0, 1], [1, 0], [1, 1], [-1, 1],
+                [0, -1], [-1, 0], [-1, -1], [1, -1]
+            ];
+            const [rowDir, colDir] = directions[direction];
+            let r = row, c = col;
 
-        function continueSelection(e) {
-            if (!isSelecting) return;
-            const cell = e.target.closest('.cell');
-            if (!cell || !isValidSelection(cell)) return;
-            
-            if (!selectedCells.includes(cell)) {
-                selectedCells.push(cell);
-                cell.classList.add('selected');
+            for (let i = 0; i < word.length; i++) {
+                if (r < 0 || r >= gridSize || c < 0 || c >= gridSize || (grid[r][c] !== word[i] && grid[r][c] !== '.')) {
+                    return false;
+                }
+                r += rowDir;
+                c += colDir;
             }
+
+            r = row;
+            c = col;
+            for (let i = 0; i < word.length; i++) {
+                grid[r][c] = word[i];
+                r += rowDir;
+                c += colDir;
+            }
+
+            return true;
         }
 
-        function handleTouchMove(e) {
-            e.preventDefault();
-            const touch = e.touches[0];
-            const cell = document.elementFromPoint(touch.clientX, touch.clientY);
-            if (!cell || !cell.classList.contains('cell') || !isValidSelection(cell)) return;
-            
-            if (!selectedCells.includes(cell)) {
-                selectedCells.push(cell);
-                cell.classList.add('selected');
-            }
+        function renderGrid(grid) {
+            const gridContainer = document.getElementById('grid');
+            gridContainer.innerHTML = '';
+            gridContainer.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+
+            grid.forEach((row, rowIndex) => {
+                row.forEach((letter, colIndex) => {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = rowIndex;
+                    cell.dataset.col = colIndex;
+                    cell.textContent = letter;
+                    gridContainer.appendChild(cell);
+                });
+            });
         }
 
-        function checkGameCompletion() {
-            if (foundWords.size === words.length) {
-                const cells = document.querySelectorAll('.cell');
-                cells.forEach(cell => cell.classList.add('completed'));
-            }
+        function renderWords() {
+            const wordsContainer = document.getElementById('words');
+            wordsContainer.innerHTML = '';
+
+            words.forEach(word => {
+                const wordElement = document.createElement('span');
+                wordElement.textContent = word;
+                wordsContainer.appendChild(wordElement);
+            });
         }
 
         function resetGame() {
-            foundWords.clear();
-            selectedCells = [];
             words = selectRandomWords();
-            const cells = document.querySelectorAll('.cell');
-            cells.forEach(cell => {
-                cell.classList.remove('selected', 'found', 'completed');
-            });
             gridData = createGrid();
             renderGrid(gridData);
             renderWords();
         }
 
-        // Add reset button event listener
         document.getElementById('resetButton').addEventListener('click', resetGame);
 
-        // Rest of the previous functions remain the same
-        // (createGrid, checkWord, updateWordList, renderGrid, renderWords)
-
-        // Initialize the game
-        words = selectRandomWords();
-        gridData = createGrid();
-        renderGrid(gridData);
-        renderWords();
-
-        // Add event listeners
-        document.addEventListener('mouseup', endSelection);
-        document.addEventListener('touchend', endSelection);
+        resetGame();
     </script>
 </body>
 </html>
