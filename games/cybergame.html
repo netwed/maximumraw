@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cybersecurity Word Search Puzzle</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            color: #4a90e2;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(20, 30px);
+            gap: 2px;
+            margin-top: 20px;
+        }
+
+        .cell {
+            width: 30px;
+            height: 30px;
+            text-align: center;
+            line-height: 30px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .cell.highlight {
+            background-color: #f9d423;
+        }
+
+        .word-list {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .word {
+            font-size: 16px;
+            color: #4a4a4a;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cybersecurity Word Search</h1>
+    <div class="grid" id="grid"></div>
+    <div class="word-list">
+        <h3>Find These Words:</h3>
+        <ul id="words"></ul>
+    </div>
+
+    <script>
+        const gridSize = 20;
+        const words = [
+            "ENCRYPTION", "FIREWALL", "HACKER", "PASSWORD", "MALWARE", 
+            "PHISHING", "BACKDOOR", "VIRUS", "SECURITY", "TROJAN", 
+            "SPYWARE", "KEYLOGGER", "PATCH", "AUTHENTICATION", "RANSOMWARE", 
+            "NETWORK", "BREACH", "PROTOCOL", "INTRUSION", "ZERO", 
+            "CRYPTANALYSIS", "HASHING", "AES", "CERTIFICATE", "SOFTWARE",
+            "MULTIFACTOR", "EXPLOIT", "MONITOR", "ANALYTICS", "LOGS",
+            "PRIVACY", "BOTNET", "ATTACK", "DEFENSE", "RISK",
+            "VULNERABILITY", "FORENSICS", "ACCESS", "CONTROL", "PROTECTION"
+        ];
+
+        const grid = document.getElementById("grid");
+        const wordList = document.getElementById("words");
+
+        function createGrid() {
+            const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const gridData = Array(gridSize).fill(null).map(() => Array(gridSize).fill(null));
+
+            // Place words in the grid
+            words.forEach(word => {
+                let placed = false;
+                while (!placed) {
+                    const row = Math.floor(Math.random() * gridSize);
+                    const col = Math.floor(Math.random() * gridSize);
+                    const direction = Math.random() > 0.5 ? 1 : -1;
+                    const fits = row + word.length * direction >= 0 && row + word.length * direction < gridSize;
+                    if (fits) {
+                        let canPlace = true;
+                        for (let i = 0; i < word.length; i++) {
+                            const targetRow = row + i * direction;
+                            if (gridData[targetRow][col] && gridData[targetRow][col] !== word[i]) {
+                                canPlace = false;
+                                break;
+                            }
+                        }
+                        if (canPlace) {
+                            for (let i = 0; i < word.length; i++) {
+                                const targetRow = row + i * direction;
+                                gridData[targetRow][col] = word[i];
+                            }
+                            placed = true;
+                        }
+                    }
+                }
+            });
+
+            // Fill remaining spaces with random letters
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    if (!gridData[i][j]) {
+                        gridData[i][j] = letters.charAt(Math.floor(Math.random() * letters.length));
+                    }
+                }
+            }
+
+            return gridData;
+        }
+
+        function renderGrid(gridData) {
+            grid.innerHTML = "";
+            gridData.forEach(row => {
+                row.forEach(letter => {
+                    const cell = document.createElement("div");
+                    cell.className = "cell";
+                    cell.textContent = letter;
+                    grid.appendChild(cell);
+                });
+            });
+        }
+
+        function renderWords() {
+            words.forEach(word => {
+                const li = document.createElement("li");
+                li.className = "word";
+                li.textContent = word;
+                wordList.appendChild(li);
+            });
+        }
+
+        const gridData = createGrid();
+        renderGrid(gridData);
+        renderWords();
+    </script>
+</body>
+</html>
