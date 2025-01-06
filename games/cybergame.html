@@ -38,11 +38,6 @@
             background-color: #fff;
             font-weight: bold;
             font-size: 14px;
-            cursor: pointer;
-        }
-
-        .cell.highlight {
-            background-color: #f9d423;
         }
 
         .word-list {
@@ -70,41 +65,41 @@
             "ENCRYPTION", "FIREWALL", "HACKER", "PASSWORD", "MALWARE", 
             "PHISHING", "BACKDOOR", "VIRUS", "SECURITY", "TROJAN", 
             "SPYWARE", "KEYLOGGER", "PATCH", "AUTHENTICATION", "RANSOMWARE", 
-            "NETWORK", "BREACH", "PROTOCOL", "INTRUSION", "ZERO", 
-            "CRYPTANALYSIS", "HASHING", "AES", "CERTIFICATE", "SOFTWARE",
-            "MULTIFACTOR", "EXPLOIT", "MONITOR", "ANALYTICS", "LOGS",
+            "NETWORK", "BREACH", "PROTOCOL", "INTRUSION", "ZERO",
+            "HASHING", "CERTIFICATE", "SOFTWARE", "MULTIFACTOR", "EXPLOIT",
             "PRIVACY", "BOTNET", "ATTACK", "DEFENSE", "RISK",
             "VULNERABILITY", "FORENSICS", "ACCESS", "CONTROL", "PROTECTION"
         ];
 
-        const grid = document.getElementById("grid");
-        const wordList = document.getElementById("words");
+        const gridElement = document.getElementById("grid");
+        const wordsElement = document.getElementById("words");
 
         function createGrid() {
             const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            const gridData = Array(gridSize).fill(null).map(() => Array(gridSize).fill(null));
+            const gridData = Array.from({ length: gridSize }, () => 
+                Array.from({ length: gridSize }, () => letters.charAt(Math.floor(Math.random() * letters.length)))
+            );
 
-            // Place words in the grid
             words.forEach(word => {
                 let placed = false;
                 while (!placed) {
                     const row = Math.floor(Math.random() * gridSize);
                     const col = Math.floor(Math.random() * gridSize);
                     const direction = Math.random() > 0.5 ? 1 : -1;
-                    const fits = row + word.length * direction >= 0 && row + word.length * direction < gridSize;
-                    if (fits) {
+
+                    if (col + word.length * direction >= 0 && col + word.length * direction < gridSize) {
                         let canPlace = true;
                         for (let i = 0; i < word.length; i++) {
-                            const targetRow = row + i * direction;
-                            if (gridData[targetRow][col] && gridData[targetRow][col] !== word[i]) {
+                            const targetCol = col + i * direction;
+                            if (gridData[row][targetCol] !== letters.charAt(Math.floor(Math.random() * letters.length))) {
                                 canPlace = false;
                                 break;
                             }
                         }
                         if (canPlace) {
                             for (let i = 0; i < word.length; i++) {
-                                const targetRow = row + i * direction;
-                                gridData[targetRow][col] = word[i];
+                                const targetCol = col + i * direction;
+                                gridData[row][targetCol] = word[i];
                             }
                             placed = true;
                         }
@@ -112,26 +107,17 @@
                 }
             });
 
-            // Fill remaining spaces with random letters
-            for (let i = 0; i < gridSize; i++) {
-                for (let j = 0; j < gridSize; j++) {
-                    if (!gridData[i][j]) {
-                        gridData[i][j] = letters.charAt(Math.floor(Math.random() * letters.length));
-                    }
-                }
-            }
-
             return gridData;
         }
 
         function renderGrid(gridData) {
-            grid.innerHTML = "";
+            gridElement.innerHTML = "";
             gridData.forEach(row => {
                 row.forEach(letter => {
                     const cell = document.createElement("div");
                     cell.className = "cell";
                     cell.textContent = letter;
-                    grid.appendChild(cell);
+                    gridElement.appendChild(cell);
                 });
             });
         }
@@ -141,7 +127,7 @@
                 const li = document.createElement("li");
                 li.className = "word";
                 li.textContent = word;
-                wordList.appendChild(li);
+                wordsElement.appendChild(li);
             });
         }
 
