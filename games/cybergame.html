@@ -27,374 +27,252 @@
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             margin-bottom: 20px;
-            max-width: 100%;
-            overflow: hidden;
         }
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(20, minmax(25px, 30px));
-            gap: 1px;
+            grid-template-columns: repeat(15, 30px);
+            gap: 2px;
             background: #f0f0f0;
             padding: 10px;
             border-radius: 5px;
-            touch-action: none;
         }
 
         .cell {
-            aspect-ratio: 1;
+            height: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: white;
             font-weight: bold;
-            font-size: 16px;
             cursor: pointer;
             user-select: none;
-            transition: all 0.2s;
+            transition: background-color 0.2s;
         }
 
         .cell.selected {
-            background: #e3f2fd;
-            color: #1976d2;
+            background: #bbdefb;
         }
 
         .cell.found {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-
-        .cell.completed {
-            animation: flash 1s infinite;
-        }
-
-        @keyframes flash {
-            0% { background: #e8f5e9; }
-            50% { background: #81c784; }
-            100% { background: #e8f5e9; }
+            background: #c8e6c9;
         }
 
         .word-list {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
-            max-width: 800px;
+            max-width: 600px;
             justify-content: center;
-            margin: 20px 0;
+            margin-top: 20px;
         }
 
         .word {
-            padding: 5px 10px;
+            padding: 5px 15px;
             background: white;
             border-radius: 15px;
-            font-size: 14px;
-            transition: all 0.3s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         .word.found {
-            background: #e8f5e9;
-            color: #2e7d32;
+            background: #c8e6c9;
             text-decoration: line-through;
         }
 
-        .reset-button {
+        button {
             padding: 10px 20px;
-            font-size: 16px;
             background: #2196f3;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            transition: background 0.3s;
+            font-size: 16px;
             margin-bottom: 20px;
         }
 
-        .reset-button:hover {
+        button:hover {
             background: #1976d2;
-        }
-
-        @media (max-width: 768px) {
-            .grid {
-                grid-template-columns: repeat(20, minmax(15px, 20px));
-                gap: 0.5px;
-                padding: 5px;
-            }
-            
-            .cell {
-                font-size: 12px;
-            }
-
-            .word {
-                font-size: 12px;
-            }
         }
     </style>
 </head>
 <body>
     <h1 class="title">Cybersecurity Word Search</h1>
-    <button class="reset-button" id="resetButton">New Game</button>
+    <button onclick="initGame()">New Game</button>
     <div class="grid-container">
         <div class="grid" id="grid"></div>
     </div>
     <div class="word-list" id="wordList"></div>
 
     <script>
-        const gridSize = 20;
-        const wordsPerGame = 15; // Reduced number of words for better performance
-        const allWords = [
-            "ENCRYPTION", "FIREWALL", "HACKER", "PASSWORD", "MALWARE",
-            "PHISHING", "BACKDOOR", "VIRUS", "SECURITY", "TROJAN",
-            "SPYWARE", "KEYLOGGER", "PATCH", "AUTHENTICATION", "RANSOMWARE",
-            "NETWORK", "BREACH", "PROTOCOL", "INTRUSION", "ZERO"
+        const GRID_SIZE = 15;
+        const WORDS = [
+            "FIREWALL", "HACKER", "PASSWORD", "MALWARE",
+            "PHISHING", "VIRUS", "SECURITY", "TROJAN",
+            "SPYWARE", "PATCH", "NETWORK", "BREACH"
         ];
 
-        class WordSearch {
-            constructor() {
-                this.grid = Array(gridSize).fill().map(() => Array(gridSize).fill(''));
-                this.words = [];
-                this.selectedCells = [];
-                this.foundWords = new Set();
-                this.isSelecting = false;
-                this.directions = [
-                    [0, 1], [1, 0], [1, 1], [-1, 1],
-                    [0, -1], [-1, 0], [-1, -1], [1, -1]
-                ];
-                this.lastTouchCell = null;
-                this.isZoomed = false;
-            }
+        let selectedCells = [];
+        let foundWords = new Set();
+        let grid = [];
+        let isSelecting = false;
 
-            selectRandomWords() {
-                const shuffled = [...allWords].sort(() => Math.random() - 0.5);
-                return shuffled.slice(0, wordsPerGame);
-            }
-
-            canPlaceWord(word, row, col, dRow, dCol) {
-                const len = word.length;
-                const endRow = row + dRow * (len - 1);
-                const endCol = col + dCol * (len - 1);
-                
-                if (endRow < 0 || endRow >= gridSize || endCol < 0 || endCol >= gridSize) {
-                    return false;
-                }
-
-                for (let i = 0; i < len; i++) {
-                    const currentRow = row + dRow * i;
-                    const currentCol = col + dCol * i;
-                    const currentCell = this.grid[currentRow][currentCol];
-                    if (currentCell !== '' && currentCell !== word[i]) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-
-            placeWord(word) {
-                const shuffledDirections = [...this.directions].sort(() => Math.random() - 0.5);
-
-                for (let attempts = 0; attempts < 100; attempts++) {
-                    const row = Math.floor(Math.random() * gridSize);
-                    const col = Math.floor(Math.random() * gridSize);
+        function createGrid() {
+            grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(''));
+            
+            // Place words
+            for (const word of WORDS) {
+                let placed = false;
+                let attempts = 0;
+                while (!placed && attempts < 100) {
+                    const direction = Math.random() < 0.5 ? 'horizontal' : 'vertical';
+                    const reverse = Math.random() < 0.3;
+                    const wordToPlace = reverse ? word.split('').reverse().join('') : word;
                     
-                    for (const [dRow, dCol] of shuffledDirections) {
-                        if (this.canPlaceWord(word, row, col, dRow, dCol)) {
-                            for (let i = 0; i < word.length; i++) {
-                                this.grid[row + dRow * i][col + dCol * i] = word[i];
-                            }
-                            return true;
+                    if (direction === 'horizontal') {
+                        const row = Math.floor(Math.random() * GRID_SIZE);
+                        const col = Math.floor(Math.random() * (GRID_SIZE - word.length + 1));
+                        
+                        if (canPlaceWord(wordToPlace, row, col, 0, 1)) {
+                            placeWord(wordToPlace, row, col, 0, 1);
+                            placed = true;
                         }
-                    }
-                }
-                return false;
-            }
-
-            createGrid() {
-                // Clear the grid
-                this.grid = Array(gridSize).fill().map(() => Array(gridSize).fill(''));
-                
-                // Get new words
-                this.words = this.selectRandomWords();
-                
-                // Sort words by length (longest first)
-                const sortedWords = [...this.words].sort((a, b) => b.length - a.length);
-                
-                // Try to place each word
-                for (const word of sortedWords) {
-                    if (!this.placeWord(word)) {
-                        // If we can't place a word, start over
-                        return this.createGrid();
-                    }
-                }
-
-                // Fill empty spaces with random letters
-                const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-                for (let i = 0; i < gridSize; i++) {
-                    for (let j = 0; j < gridSize; j++) {
-                        if (this.grid[i][j] === '') {
-                            this.grid[i][j] = letters[Math.floor(Math.random() * letters.length)];
-                        }
-                    }
-                }
-            }
-
-            renderGrid() {
-                const gridElement = document.getElementById('grid');
-                gridElement.innerHTML = '';
-                
-                for (let i = 0; i < gridSize; i++) {
-                    for (let j = 0; j < gridSize; j++) {
-                        const cell = document.createElement('div');
-                        cell.className = 'cell';
-                        cell.textContent = this.grid[i][j];
-                        cell.dataset.row = i;
-                        cell.dataset.col = j;
-                        gridElement.appendChild(cell);
-                    }
-                }
-            }
-
-            renderWordList() {
-                const wordList = document.getElementById('wordList');
-                wordList.innerHTML = '';
-                
-                this.words.sort().forEach(word => {
-                    const wordElement = document.createElement('div');
-                    wordElement.className = 'word';
-                    wordElement.textContent = word;
-                    if (this.foundWords.has(word)) {
-                        wordElement.classList.add('found');
-                    }
-                    wordList.appendChild(wordElement);
-                });
-            }
-
-            handleSelection(cell) {
-                if (!this.isSelecting) return;
-                
-                const row = parseInt(cell.dataset.row);
-                const col = parseInt(cell.dataset.col);
-                
-                if (this.selectedCells.length === 0) {
-                    this.selectedCells.push(cell);
-                    cell.classList.add('selected');
-                    return;
-                }
-
-                const firstCell = this.selectedCells[0];
-                const firstRow = parseInt(firstCell.dataset.row);
-                const firstCol = parseInt(firstCell.dataset.col);
-                
-                const dRow = Math.sign(row - firstRow) || 0;
-                const dCol = Math.sign(col - firstCol) || 0;
-                
-                if (this.selectedCells.length === 1) {
-                    this.direction = [dRow, dCol];
-                } else {
-                    const expectedRow = firstRow + this.direction[0] * this.selectedCells.length;
-                    const expectedCol = firstCol + this.direction[1] * this.selectedCells.length;
-                    if (row !== expectedRow || col !== expectedCol) return;
-                }
-
-                if (!this.selectedCells.includes(cell)) {
-                    this.selectedCells.push(cell);
-                    cell.classList.add('selected');
-                }
-            }
-
-            checkWord() {
-                const word = this.selectedCells.map(cell => cell.textContent).join('');
-                const reversed = word.split('').reverse().join('');
-                
-                if ((this.words.includes(word) && !this.foundWords.has(word)) ||
-                    (this.words.includes(reversed) && !this.foundWords.has(reversed))) {
-                    const foundWord = this.words.includes(word) ? word : reversed;
-                    this.foundWords.add(foundWord);
-                    this.selectedCells.forEach(cell => {
-                        cell.classList.remove('selected');
-                        cell.classList.add('found');
-                    });
-                    this.renderWordList();
-                    this.checkCompletion();
-                    return true;
-                }
-                return false;
-            }
-
-            checkCompletion() {
-                if (this.foundWords.size === this.words.length) {
-                    document.querySelectorAll('.cell').forEach(cell => {
-                        cell.classList.add('completed');
-                    });
-                }
-            }
-
-            setupEventListeners() {
-                const gridElement = document.getElementById('grid');
-                
-                const handleStart = (e) => {
-                    e.preventDefault();
-                    const cell = e.target.closest('.cell');
-                    if (!cell) return;
-                    
-                    this.isSelecting = true;
-                    this.selectedCells.forEach(cell => cell.classList.remove('selected'));
-                    this.selectedCells = [];
-                    this.direction = null;
-                    this.handleSelection(cell);
-                };
-
-                const handleMove = (e) => {
-                    e.preventDefault();
-                    if (!this.isSelecting) return;
-                    
-                    let targetCell;
-                    if (e.type === 'touchmove') {
-                        const touch = e.touches[0];
-                        const touchElement = document.elementFromPoint(touch.clientX, touch.clientY);
-                        targetCell = touchElement ? touchElement.closest('.cell') : null;
                     } else {
-                        targetCell = e.target.closest('.cell');
+                        const row = Math.floor(Math.random() * (GRID_SIZE - word.length + 1));
+                        const col = Math.floor(Math.random() * GRID_SIZE);
+                        
+                        if (canPlaceWord(wordToPlace, row, col, 1, 0)) {
+                            placeWord(wordToPlace, row, col, 1, 0);
+                            placed = true;
+                        }
                     }
-                    
-                    if (targetCell) this.handleSelection(targetCell);
-                };
-
-                const handleEnd = () => {
-                    if (!this.isSelecting) return;
-                    this.isSelecting = false;
-                    
-                    if (!this.checkWord()) {
-                        this.selectedCells.forEach(cell => cell.classList.remove('selected'));
-                    }
-                    this.selectedCells = [];
-                    this.direction = null;
-                };
-
-                gridElement.addEventListener('mousedown', handleStart);
-                gridElement.addEventListener('mousemove', handleMove);
-                document.addEventListener('mouseup', handleEnd);
-
-                gridElement.addEventListener('touchstart', handleStart, { passive: false });
-                gridElement.addEventListener('touchmove', handleMove, { passive: false });
-                document.addEventListener('touchend', handleEnd);
+                    attempts++;
+                }
             }
 
-            initializeGame() {
-                this.createGrid();
-                this.renderGrid();
-                this.renderWordList();
-                this.setupEventListeners();
+            // Fill empty cells
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    if (grid[i][j] === '') {
+                        grid[i][j] = letters[Math.floor(Math.random() * letters.length)];
+                    }
+                }
             }
         }
 
-        // Initialize game
-        let game = new WordSearch();
-        game.initializeGame();
+        function canPlaceWord(word, row, col, dRow, dCol) {
+            for (let i = 0; i < word.length; i++) {
+                const newRow = row + dRow * i;
+                const newCol = col + dCol * i;
+                if (grid[newRow][newCol] !== '' && grid[newRow][newCol] !== word[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
 
-        // Reset button
-        document.getElementById('resetButton').addEventListener('click', () => {
-            game = new WordSearch();
-            game.initializeGame();
-        });
+        function placeWord(word, row, col, dRow, dCol) {
+            for (let i = 0; i < word.length; i++) {
+                grid[row + dRow * i][col + dCol * i] = word[i];
+            }
+        }
+
+        function renderGrid() {
+            const gridElement = document.getElementById('grid');
+            gridElement.innerHTML = '';
+            
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.textContent = grid[i][j];
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    gridElement.appendChild(cell);
+                }
+            }
+        }
+
+        function renderWordList() {
+            const wordList = document.getElementById('wordList');
+            wordList.innerHTML = '';
+            
+            WORDS.sort().forEach(word => {
+                const wordElement = document.createElement('div');
+                wordElement.className = 'word' + (foundWords.has(word) ? ' found' : '');
+                wordElement.textContent = word;
+                wordList.appendChild(wordElement);
+            });
+        }
+
+        function checkSelection() {
+            const word = selectedCells.map(cell => cell.textContent).join('');
+            const reversed = word.split('').reverse().join('');
+            
+            if (WORDS.includes(word) && !foundWords.has(word)) {
+                foundWords.add(word);
+                selectedCells.forEach(cell => {
+                    cell.classList.remove('selected');
+                    cell.classList.add('found');
+                });
+                renderWordList();
+                return true;
+            } else if (WORDS.includes(reversed) && !foundWords.has(reversed)) {
+                foundWords.add(reversed);
+                selectedCells.forEach(cell => {
+                    cell.classList.remove('selected');
+                    cell.classList.add('found');
+                });
+                renderWordList();
+                return true;
+            }
+            return false;
+        }
+
+        function initGame() {
+            foundWords.clear();
+            selectedCells = [];
+            createGrid();
+            renderGrid();
+            renderWordList();
+            setupEventListeners();
+        }
+
+        function setupEventListeners() {
+            const gridElement = document.getElementById('grid');
+            
+            gridElement.addEventListener('mousedown', e => {
+                const cell = e.target.closest('.cell');
+                if (!cell) return;
+                
+                isSelecting = true;
+                selectedCells.forEach(cell => cell.classList.remove('selected'));
+                selectedCells = [cell];
+                cell.classList.add('selected');
+            });
+
+            gridElement.addEventListener('mouseover', e => {
+                if (!isSelecting) return;
+                const cell = e.target.closest('.cell');
+                if (!cell || selectedCells.includes(cell)) return;
+                
+                selectedCells.push(cell);
+                cell.classList.add('selected');
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (!isSelecting) return;
+                isSelecting = false;
+                
+                if (!checkSelection()) {
+                    selectedCells.forEach(cell => cell.classList.remove('selected'));
+                }
+                selectedCells = [];
+            });
+        }
+
+        // Initialize the game
+        initGame();
     </script>
 </body>
 </html>
