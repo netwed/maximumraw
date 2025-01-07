@@ -39,7 +39,6 @@
             padding: 10px;
             border-radius: 5px;
             touch-action: none;
-            transition: transform 0.3s ease;
         }
 
         .cell {
@@ -128,15 +127,6 @@
             .word {
                 font-size: 12px;
             }
-
-            .reset-button {
-                margin-bottom: 20px;
-            }
-
-            .grid-container {
-                padding: 10px;
-                margin: 10px 0;
-            }
         }
     </style>
 </head>
@@ -150,15 +140,12 @@
 
     <script>
         const gridSize = 20;
-        const wordsPerGame = 34;
+        const wordsPerGame = 15; // Reduced number of words for better performance
         const allWords = [
             "ENCRYPTION", "FIREWALL", "HACKER", "PASSWORD", "MALWARE",
             "PHISHING", "BACKDOOR", "VIRUS", "SECURITY", "TROJAN",
             "SPYWARE", "KEYLOGGER", "PATCH", "AUTHENTICATION", "RANSOMWARE",
-            "NETWORK", "BREACH", "PROTOCOL", "INTRUSION", "ZERO",
-            "HASHING", "CERTIFICATE", "SOFTWARE", "MULTIFACTOR", "EXPLOIT",
-            "PRIVACY", "BOTNET", "ATTACK", "DEFENSE", "RISK",
-            "VULNERABILITY", "FORENSICS", "ACCESS", "CONTROL", "PROTECTION"
+            "NETWORK", "BREACH", "PROTOCOL", "INTRUSION", "ZERO"
         ];
 
         class WordSearch {
@@ -168,46 +155,33 @@
                 this.selectedCells = [];
                 this.foundWords = new Set();
                 this.isSelecting = false;
-                this.startCell = null;
                 this.directions = [
                     [0, 1], [1, 0], [1, 1], [-1, 1],
                     [0, -1], [-1, 0], [-1, -1], [1, -1]
                 ];
-                this.touchStartX = null;
-                this.touchStartY = null;
                 this.lastTouchCell = null;
-                this.zoomLevel = 1;
                 this.isZoomed = false;
-                this.lastTap = 0;
-            }
-
-            initializeGame() {
-                this.words = this.selectRandomWords();
-                this.createGrid();
-                this.renderGrid();
-                this.renderWordList();
-                this.setupEventListeners();
             }
 
             selectRandomWords() {
-                return [...allWords]
-                    .sort(() => Math.random() - 0.5)
-                    .slice(0, wordsPerGame);
+                const shuffled = [...allWords].sort(() => Math.random() - 0.5);
+                return shuffled.slice(0, wordsPerGame);
             }
 
             canPlaceWord(word, row, col, dRow, dCol) {
                 const len = word.length;
+                const endRow = row + dRow * (len - 1);
+                const endCol = col + dCol * (len - 1);
                 
-                if (row + dRow * (len - 1) < 0 || row + dRow * (len - 1) >= gridSize ||
-                    col + dCol * (len - 1) < 0 || col + dCol * (len - 1) >= gridSize) {
+                if (endRow < 0 || endRow >= gridSize || endCol < 0 || endCol >= gridSize) {
                     return false;
                 }
 
                 for (let i = 0; i < len; i++) {
-                    const newRow = row + dRow * i;
-                    const newCol = col + dCol * i;
-                    if (this.grid[newRow][newCol] !== '' && 
-                        this.grid[newRow][newCol] !== word[i]) {
+                    const currentRow = row + dRow * i;
+                    const currentCol = col + dCol * i;
+                    const currentCell = this.grid[currentRow][currentCol];
+                    if (currentCell !== '' && currentCell !== word[i]) {
                         return false;
                     }
                 }
@@ -215,8 +189,7 @@
             }
 
             placeWord(word) {
-                const shuffledDirections = [...this.directions]
-                    .sort(() => Math.random() - 0.5);
+                const shuffledDirections = [...this.directions].sort(() => Math.random() - 0.5);
 
                 for (let attempts = 0; attempts < 100; attempts++) {
                     const row = Math.floor(Math.random() * gridSize);
@@ -235,15 +208,24 @@
             }
 
             createGrid() {
+                // Clear the grid
                 this.grid = Array(gridSize).fill().map(() => Array(gridSize).fill(''));
+                
+                // Get new words
+                this.words = this.selectRandomWords();
+                
+                // Sort words by length (longest first)
                 const sortedWords = [...this.words].sort((a, b) => b.length - a.length);
                 
+                // Try to place each word
                 for (const word of sortedWords) {
                     if (!this.placeWord(word)) {
+                        // If we can't place a word, start over
                         return this.createGrid();
                     }
                 }
 
+                // Fill empty spaces with random letters
                 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
                 for (let i = 0; i < gridSize; i++) {
                     for (let j = 0; j < gridSize; j++) {
@@ -345,14 +327,6 @@
                 }
             }
 
-            toggleZoom(element) {
-                this.isZoomed = !this.isZoomed;
-                const scale = this.isZoomed ? 1.5 : 1;
-                element.style.transform = `scale(${scale})`;
-                element.style.transformOrigin = 'center center';
-                element.style.transition = 'transform 0.3s ease';
-            }
-
             setupEventListeners() {
                 const gridElement = document.getElementById('grid');
                 
@@ -360,19 +334,6 @@
                     e.preventDefault();
                     const cell = e.target.closest('.cell');
                     if (!cell) return;
-                    
-                    if (e.type === 'touchstart') {
-                        const now = Date.now();
-                        if (this.lastTap && (now - this.lastTap) < 300) {
-                            this.toggleZoom(gridElement);
-                            return;
-                        }
-                        this.lastTap = now;
-                        
-                        this.touchStartX = e.touches[0].clientX;
-                        this.touchStartY = e.touches[0].clientY;
-                        this.lastTouchCell = cell;
-                    }
                     
                     this.isSelecting = true;
                     this.selectedCells.forEach(cell => cell.classList.remove('selected'));
@@ -390,20 +351,6 @@
                         const touch = e.touches[0];
                         const touchElement = document.elementFromPoint(touch.clientX, touch.clientY);
                         targetCell = touchElement ? touchElement.closest('.cell') : null;
-                        
-                        if (!targetCell && this.lastTouchCell) {
-                            const cells = document.elementsFromPoint(touch.clientX, touch.clientY);
-                            for (const element of cells) {
-                                if (element.classList.contains('cell')) {
-                                    targetCell = element;
-                                    break;
-                                }
-                            }
-                        }
-                        
-                        if (targetCell) {
-                            this.lastTouchCell = targetCell;
-                        }
                     } else {
                         targetCell = e.target.closest('.cell');
                     }
@@ -420,7 +367,6 @@
                     }
                     this.selectedCells = [];
                     this.direction = null;
-                    this.lastTouchCell = null;
                 };
 
                 gridElement.addEventListener('mousedown', handleStart);
@@ -428,4 +374,27 @@
                 document.addEventListener('mouseup', handleEnd);
 
                 gridElement.addEventListener('touchstart', handleStart, { passive: false });
-                gridElement.addEventListener('touchmove',
+                gridElement.addEventListener('touchmove', handleMove, { passive: false });
+                document.addEventListener('touchend', handleEnd);
+            }
+
+            initializeGame() {
+                this.createGrid();
+                this.renderGrid();
+                this.renderWordList();
+                this.setupEventListeners();
+            }
+        }
+
+        // Initialize game
+        let game = new WordSearch();
+        game.initializeGame();
+
+        // Reset button
+        document.getElementById('resetButton').addEventListener('click', () => {
+            game = new WordSearch();
+            game.initializeGame();
+        });
+    </script>
+</body>
+</html>
