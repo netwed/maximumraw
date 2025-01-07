@@ -28,7 +28,7 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             margin-bottom: 20px;
             max-width: 100%;
-            overflow-x: auto;
+            overflow: hidden;
         }
 
         .grid {
@@ -38,6 +38,8 @@
             background: #f0f0f0;
             padding: 10px;
             border-radius: 5px;
+            touch-action: none;
+            transition: transform 0.3s ease;
         }
 
         .cell {
@@ -168,15 +170,15 @@
                 this.isSelecting = false;
                 this.startCell = null;
                 this.directions = [
-                    [0, 1],   // right
-                    [1, 0],   // down
-                    [1, 1],   // diagonal down-right
-                    [-1, 1],  // diagonal up-right
-                    [0, -1],  // left
-                    [-1, 0],  // up
-                    [-1, -1], // diagonal up-left
-                    [1, -1]   // diagonal down-left
+                    [0, 1], [1, 0], [1, 1], [-1, 1],
+                    [0, -1], [-1, 0], [-1, -1], [1, -1]
                 ];
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.lastTouchCell = null;
+                this.zoomLevel = 1;
+                this.isZoomed = false;
+                this.lastTap = 0;
             }
 
             initializeGame() {
@@ -343,6 +345,14 @@
                 }
             }
 
+            toggleZoom(element) {
+                this.isZoomed = !this.isZoomed;
+                const scale = this.isZoomed ? 1.5 : 1;
+                element.style.transform = `scale(${scale})`;
+                element.style.transformOrigin = 'center center';
+                element.style.transition = 'transform 0.3s ease';
+            }
+
             setupEventListeners() {
                 const gridElement = document.getElementById('grid');
                 
@@ -350,6 +360,19 @@
                     e.preventDefault();
                     const cell = e.target.closest('.cell');
                     if (!cell) return;
+                    
+                    if (e.type === 'touchstart') {
+                        const now = Date.now();
+                        if (this.lastTap && (now - this.lastTap) < 300) {
+                            this.toggleZoom(gridElement);
+                            return;
+                        }
+                        this.lastTap = now;
+                        
+                        this.touchStartX = e.touches[0].clientX;
+                        this.touchStartY = e.touches[0].clientY;
+                        this.lastTouchCell = cell;
+                    }
                     
                     this.isSelecting = true;
                     this.selectedCells.forEach(cell => cell.classList.remove('selected'));
@@ -362,14 +385,30 @@
                     e.preventDefault();
                     if (!this.isSelecting) return;
                     
-                    const cell = e.type === 'touchmove'
-                        ? document.elementFromPoint(
-                            e.touches[0].clientX,
-                            e.touches[0].clientY
-                          ).closest('.cell')
-                        : e.target.closest('.cell');
+                    let targetCell;
+                    if (e.type === 'touchmove') {
+                        const touch = e.touches[0];
+                        const touchElement = document.elementFromPoint(touch.clientX, touch.clientY);
+                        targetCell = touchElement ? touchElement.closest('.cell') : null;
+                        
+                        if (!targetCell && this.lastTouchCell) {
+                            const cells = document.elementsFromPoint(touch.clientX, touch.clientY);
+                            for (const element of cells) {
+                                if (element.classList.contains('cell')) {
+                                    targetCell = element;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (targetCell) {
+                            this.lastTouchCell = targetCell;
+                        }
+                    } else {
+                        targetCell = e.target.closest('.cell');
+                    }
                     
-                    if (cell) this.handleSelection(cell);
+                    if (targetCell) this.handleSelection(targetCell);
                 };
 
                 const handleEnd = () => {
@@ -381,6 +420,7 @@
                     }
                     this.selectedCells = [];
                     this.direction = null;
+                    this.lastTouchCell = null;
                 };
 
                 gridElement.addEventListener('mousedown', handleStart);
@@ -388,20 +428,4 @@
                 document.addEventListener('mouseup', handleEnd);
 
                 gridElement.addEventListener('touchstart', handleStart, { passive: false });
-                gridElement.addEventListener('touchmove', handleMove, { passive: false });
-                document.addEventListener('touchend', handleEnd);
-            }
-        }
-
-        // Initialize game
-        let game = new WordSearch();
-        game.initializeGame();
-
-        // Reset button
-        document.getElementById('resetButton').addEventListener('click', () => {
-            game = new WordSearch();
-            game.initializeGame();
-        });
-    </script>
-</body>
-</html>
+                gridElement.addEventListener('touchmove',
