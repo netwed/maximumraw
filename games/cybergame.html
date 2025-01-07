@@ -105,7 +105,7 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background 0.3s;
-            margin-bottom: 20px; /* Added margin for spacing */
+            margin-bottom: 20px;
         }
 
         .reset-button:hover {
@@ -114,11 +114,13 @@
 
         @media (max-width: 768px) {
             .grid {
-                grid-template-columns: repeat(20, minmax(20px, 25px));
+                grid-template-columns: repeat(20, minmax(15px, 20px));
+                gap: 0.5px;
+                padding: 5px;
             }
             
             .cell {
-                font-size: 14px;
+                font-size: 12px;
             }
 
             .word {
@@ -126,7 +128,12 @@
             }
 
             .reset-button {
-                margin-bottom: 30px; /* Increased margin for mobile */
+                margin-bottom: 20px;
+            }
+
+            .grid-container {
+                padding: 10px;
+                margin: 10px 0;
             }
         }
     </style>
