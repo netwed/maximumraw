@@ -105,6 +105,7 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background 0.3s;
+            margin-bottom: 20px; /* Added margin for spacing */
         }
 
         .reset-button:hover {
@@ -122,6 +123,10 @@
 
             .word {
                 font-size: 12px;
+            }
+
+            .reset-button {
+                margin-bottom: 30px; /* Increased margin for mobile */
             }
         }
     </style>
@@ -184,13 +189,11 @@
             canPlaceWord(word, row, col, dRow, dCol) {
                 const len = word.length;
                 
-                // Check if word fits within grid bounds
                 if (row + dRow * (len - 1) < 0 || row + dRow * (len - 1) >= gridSize ||
                     col + dCol * (len - 1) < 0 || col + dCol * (len - 1) >= gridSize) {
                     return false;
                 }
 
-                // Check if path is clear or has matching letters
                 for (let i = 0; i < len; i++) {
                     const newRow = row + dRow * i;
                     const newCol = col + dCol * i;
@@ -212,7 +215,6 @@
                     
                     for (const [dRow, dCol] of shuffledDirections) {
                         if (this.canPlaceWord(word, row, col, dRow, dCol)) {
-                            // Place the word
                             for (let i = 0; i < word.length; i++) {
                                 this.grid[row + dRow * i][col + dCol * i] = word[i];
                             }
@@ -227,15 +229,12 @@
                 this.grid = Array(gridSize).fill().map(() => Array(gridSize).fill(''));
                 const sortedWords = [...this.words].sort((a, b) => b.length - a.length);
                 
-                // Attempt to place all words
                 for (const word of sortedWords) {
                     if (!this.placeWord(word)) {
-                        // If word placement fails, start over
                         return this.createGrid();
                     }
                 }
 
-                // Fill empty cells with random letters
                 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
                 for (let i = 0; i < gridSize; i++) {
                     for (let j = 0; j < gridSize; j++) {
@@ -293,11 +292,9 @@
                 const firstRow = parseInt(firstCell.dataset.row);
                 const firstCol = parseInt(firstCell.dataset.col);
                 
-                // Calculate direction
                 const dRow = Math.sign(row - firstRow) || 0;
                 const dCol = Math.sign(col - firstCol) || 0;
                 
-                // Check if selection follows a straight line
                 if (this.selectedCells.length === 1) {
                     this.direction = [dRow, dCol];
                 } else {
