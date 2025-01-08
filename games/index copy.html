@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Explore and purchase exciting games: Word Search Puzzles, Board Games, and more!">
+    <title>MaximumRaw GameHub | Play & Shop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Basic Reset */
+        body, h1, h2, p, ul, li, a {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Header Styling */
+        header {
+            background: linear-gradient(45deg, #0078FF, #00D1FF);
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+        }
+
+        /* Navigation Bar */
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        nav a {
+            text-decoration: none;
+            font-size: 1rem;
+            color: #0078FF;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #0056b3;
+        }
+
+        /* Hero Section */
+        .hero {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .hero .content {
+            flex: 1;
+            max-width: 500px;
+            margin: 10px;
+            text-align: center;
+        }
+
+        .hero .content h2 {
+            font-size: 2rem;
+            color: #0078FF;
+        }
+
+        .hero .content p {
+            margin: 10px 0 20px;
+            font-size: 1rem;
+        }
+
+        .hero .qr-code {
+            flex: 1;
+            text-align: center;
+            margin: 10px;
+        }
+
+        .hero .qr-code a img {
+            width: 180px;
+            height: auto;
+            border: 2px solid #0078FF;
+            border-radius: 10px;
+        }
+
+        .hero .qr-code p {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #0078FF;
+        }
+
+        /* Games Section */
+        .games-section {
+            background: #fff;
+            padding: 30px 10px;
+        }
+
+        .games-section h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #0078FF;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 0 10px;
+        }
+
+        .game-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .game-card:hover {
+            transform: scale(1.05);
+        }
+
+        .game-card img {
+            width: 80px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        .game-card h3 {
+            font-size: 1.2rem;
+            color: #0078FF;
+            margin-bottom: 10px;
+        }
+
+        .game-card p {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .game-card a {
+            text-decoration: none;
+            padding: 8px 15px;
+            background: #0078FF;
+            color: #fff;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            transition: background 0.3s;
+        }
+
+        .game-card a:hover {
+            background: #0056b3;
+        }
+
+        /* Footer */
+        footer {
+            background: #333;
+            color: #fff;
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        footer p {
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2rem;
+            }
+
+            .hero .content h2 {
+                font-size: 1.8rem;
+            }
+
+            .hero .content p {
+                font-size: 0.9rem;
+            }
+
+            .hero .qr-code img {
+                width: 150px;
+            }
+
+            nav a {
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            header p {
+                font-size: 1rem;
+            }
+
+            .hero .content h2 {
+                font-size: 1.5rem;
+            }
+
+            .hero .qr-code img {
+                width: 120px;
+            }
+
+            nav a {
+                font-size: 0.8rem;
+            }
+
+            .game-card h3 {
+                font-size: 1rem;
+            }
+
+            .game-card p {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <h1>MaximumRaw GameHub</h1>
+        <p>Your one-stop destination for exciting games!</p>
+    </header>
+
+    <!-- Navigation -->
+    <nav>
+        <a href="#games">Games</a>
+        <a href="#about">About Us</a>
+        <a href="#contact">Contact</a>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="content">
+            <h2>Scan and Play!</h2>
+            <p>Explore the best games, from puzzles to board games, and play directly from your device after scanning the QR code below.</p>
+        </div>
+        <div class="qr-code">
+            <a href="https://www.maximumraw.com/games/cybergame.html" target="_blank">
+                <img src="qr-code.png" alt="Scan QR Code">
+            </a>
+            <p>Scan this QR code or click to visit GameHub Members!</p>
+        </div>
+    </section>
+
+    <!-- Games Section -->
+    <section id="games" class="games-section">
+        <h2>Our Games</h2>
+        <div class="games-grid">
+            <div class="game-card">
+                <img src="word-search.png" alt="Word Search Puzzle">
+                <h3>Word Search Puzzle</h3>
+                <p>Challenge your brain with our exciting word search puzzles!</p>
+                <a href="#">Learn More</a>
+            </div>
+            <div class="game-card">
+                <img src="board-game.png" alt="Board Games">
+                <h3>Board Games</h3>
+                <p>Enjoy classic board games with friends and family.</p>
+                <a href="#">Learn More</a>
+            </div>
+            <div class="game-card">
+                <img src="jigsaw.png" alt="Jigsaw Puzzle">
+                <h3>Jigsaw Puzzle</h3>
+                <p>Relax and unwind with our collection of puzzles.</p>
+                <a href="#">Learn More</a>
+            </div>
+            <div class="game-card">
+                <img src="strategy-game.png" alt="Strategy Games">
+                <h3>Strategy Games</h3>
+                <p>Sharpen your skills with competitive strategy games.</p>
+                <a href="#">Learn More</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2019-2025 MaximumRaw GameHub. All rights reserved.</p>
+    </footer>
+
+    <!-- Automatic User Data Collection -->
+    <script>
+        const userData = {
+            ipAddress: 'Unknown', // Backend will capture IP
+            browser: navigator.userAgent,
+            platform: navigator.platform,
+            language: navigator.language,
+            screenResolution: `${window.screen.width}x${window.screen.height}`,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            referrer: document.referrer || 'Direct Visit',
+        };
+
+        // Send data to backend
+        fetch('http://127.0.0.1:5000/collect-data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData),
+        })
+        .then(response => response.json())
+        .then(data => console.log('Data sent:', data))
+        .catch(error => console.error('Error:', error));
+    </script>
+</body>
+</html>

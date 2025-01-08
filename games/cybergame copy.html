@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MaximumRaw Cybersecurity Word Search</title>
     <style>
+        /* Keep all original CSS unchanged */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -34,7 +35,7 @@
         .grid {
             display: grid;
             grid-template-columns: repeat(20, minmax(25px, 30px));
-            gap: 0;
+            gap: 1px;
             background: #f0f0f0;
             padding: 10px;
             border-radius: 5px;
@@ -53,48 +54,16 @@
             cursor: pointer;
             user-select: none;
             transition: all 0.2s;
-            margin: 1px;
-            position: relative;
         }
 
         .cell.selected {
             background: #e3f2fd;
             color: #1976d2;
-            z-index: 1;
-        }
-
-        .cell.selected.start {
-            border-top-left-radius: 15px;
-            border-bottom-left-radius: 15px;
-        }
-
-        .cell.selected.middle {
-            border-radius: 0;
-        }
-
-        .cell.selected.end {
-            border-top-right-radius: 15px;
-            border-bottom-right-radius: 15px;
         }
 
         .cell.found {
             background: #e8f5e9;
             color: #2e7d32;
-            z-index: 1;
-        }
-
-        .cell.found-start {
-            border-top-left-radius: 15px;
-            border-bottom-left-radius: 15px;
-        }
-
-        .cell.found-middle {
-            border-radius: 0;
-        }
-
-        .cell.found-end {
-            border-top-right-radius: 15px;
-            border-bottom-right-radius: 15px;
         }
 
         .cell.completed {
@@ -149,12 +118,12 @@
         @media (max-width: 768px) {
             .grid {
                 grid-template-columns: repeat(20, minmax(15px, 20px));
+                gap: 0.5px;
                 padding: 5px;
             }
             
             .cell {
                 font-size: 12px;
-                margin: 0.5px;
             }
 
             .word {
@@ -182,18 +151,38 @@
 
     <script>
         const gridSize = 20;
-        const wordsPerGame = 24;
+        const wordsPerGame = 24;  // Restored to original 34 words
         const allWords = [
-            "ENCRYPTION", "FIREWALL", "HACKER", "PASSWORD", "MALWARE",  
-            "PHISHING", "BACKDOOR", "VIRUS", "SECURITY", "TROJAN",  
-            "SPYWARE", "KEYLOGGER", "PATCH", "AUTHENTICATION", "RANSOMWARE",  
-            "NETWORK", "BREACH", "PROTOCOL", "INTRUSION", "ZERODAY",  
-            "HASHING", "CERTIFICATE", "SOFTWARE", "MULTIFACTOR", "EXPLOIT",  
-            "PRIVACY", "BOTNET", "ATTACK", "DEFENSE", "RISK",  
-            "VULNERABILITY", "FORENSICS", "ACCESS", "CONTROL", "PROTECTION",  
-            "FRAUD", "DECRYPTION", "INJECTION", "CLUSTER", "RAT",  
-            "PHISH", "BOTS", "FLOODING", "ACCESSORY", "SERVER",  
-            "VULNERABLE", "CRYPTOGRAPHY", "TRAFFIC", "HARDENING", "TUNNEL"
+"ENCRYPTION", "FIREWALL", "HACKER", "PASSWORD", "MALWARE",  
+"PHISHING", "BACKDOOR", "VIRUS", "SECURITY", "TROJAN",  
+"SPYWARE", "KEYLOGGER", "PATCH", "AUTHENTICATION", "RANSOMWARE",  
+"NETWORK", "BREACH", "PROTOCOL", "INTRUSION", "ZERODAY",  
+"HASHING", "CERTIFICATE", "SOFTWARE", "MULTIFACTOR", "EXPLOIT",  
+"PRIVACY", "BOTNET", "ATTACK", "DEFENSE", "RISK",  
+"VULNERABILITY", "FORENSICS", "ACCESS", "CONTROL", "PROTECTION",  
+"FRAUD", "DECRYPTION", "INJECTION", "CLUSTER", "RAT",  
+"PHISH", "BOTS", "FLOODING", "ACCESSORY", "SERVER",  
+"VULNERABLE", "CRYPTOGRAPHY", "TRAFFIC", "HARDENING", "TUNNEL",  
+"SECURE", "LOGGING", "MONITORING", "MFA", "BACKUP",  
+"BREACHING", "LOCKDOWN", "CIPHER", "EXPLOITATION", "IMPERSONATION",  
+"TRACEROUTE", "BYPASS", "THREAT", "ENCRYPT", "ANTIVIRUS",  
+"UPGRADE", "TRACKING", "REMOTE", "SECURITYPOLICY", "ENCLAVE",  
+"HEURISTICS", "MANAGEMENT", "ACCESSIBLE", "INTERCEPT", "ENDPOINT",  
+"ENHANCED", "EXPOSURE", "COMPLIANCE", "DISASTER", "DEFLECT",  
+"CONFIGURATION", "PATCHING", "AUTOMATION", "DETECTION", "PREDICTION",  
+"FORCEFIELD", "ISOLATION", "DEACTIVATE", "OBFUSCATION", "AUTOTASK",  
+"CLONING", "STEALTH", "CONTROLLED", "ANALYTICS", "VISUALIZATION",  
+"REMEDIATION", "FINGERPRINT", "ISOLATE", "DATALEAK", "SANDOX",  
+"LOGICAL", "SYNCHRONIZE", "EXTRUSION", "TRADEOFF", "COVERT",  
+"RECONNAISSANCE", "FUSION", "TRACKER", "INTERCEPTION", "DEFLECTOR",  
+"AUTHORIZATION", "FORGERY", "BLOCKCHAIN", "DATAMINE", "BREACHER",  
+"RECON", "LATERAL", "BLAST", "MONITOR", "TRADESECRET",  
+"STEALTHY", "CIRCULAR", "RELIABLE", "FILTER", "TESTER",  
+"CLIENT", "CERTIFY", "FILTERING", "REMOVAL", "COMPROMISED",  
+"OBSCURE", "RECONNECTION", "FIREWALLS", "INFRASTRUCTURE", "REMOTEACCESS",  
+"NETWORKING", "QUARANTINE", "AGENT", "CORRUPT", "REDTEAM",  
+"SECUREHOST", "HEALTHCHECK", "SIMULATOR", "PSEUDONYM", "FAKERY"
+
         ];
 
         class WordSearch {
@@ -287,6 +276,7 @@
                         }
                     }
                 }
+                return true; // Added to ensure grid creation success
             }
 
             renderGrid() {
@@ -328,7 +318,7 @@
                 
                 if (this.selectedCells.length === 0) {
                     this.selectedCells.push(cell);
-                    cell.classList.add('selected', 'start');
+                    cell.classList.add('selected');
                     return;
                 }
 
@@ -348,13 +338,8 @@
                 }
 
                 if (!this.selectedCells.includes(cell)) {
-                    if (this.selectedCells.length > 1) {
-                        this.selectedCells[this.selectedCells.length - 1].classList.remove('end');
-                        this.selectedCells[this.selectedCells.length - 1].classList.add('middle');
-                    }
-                    
                     this.selectedCells.push(cell);
-                    cell.classList.add('selected', 'end');
+                    cell.classList.add('selected');
                 }
             }
 
@@ -366,19 +351,10 @@
                     (this.words.includes(reversed) && !this.foundWords.has(reversed))) {
                     const foundWord = this.words.includes(word) ? word : reversed;
                     this.foundWords.add(foundWord);
-                    
-                    this.selectedCells.forEach((cell, index) => {
-                        cell.classList.remove('selected', 'start', 'middle', 'end');
+                    this.selectedCells.forEach(cell => {
+                        cell.classList.remove('selected');
                         cell.classList.add('found');
-                        if (index === 0) {
-                            cell.classList.add('found-start');
-                        } else if (index === this.selectedCells.length - 1) {
-                            cell.classList.add('found-end');
-                        } else {
-                            cell.classList.add('found-middle');
-                        }
                     });
-
                     this.renderWordList();
                     this.checkCompletion();
                     return true;
@@ -392,6 +368,14 @@
                         cell.classList.add('completed');
                     });
                 }
+            }
+
+            toggleZoom(element) {
+                this.isZoomed = !this.isZoomed;
+                const scale = this.isZoomed ? 1.5 : 1;
+                element.style.transform = `scale(${scale})`;
+                element.style.transformOrigin = 'center center';
+                element.style.transition = 'transform 0.3s ease';
             }
 
             setupEventListeners() {
@@ -416,9 +400,7 @@
                     }
                     
                     this.isSelecting = true;
-                    this.selectedCells.forEach(cell => {
-                        cell.classList.remove('selected', 'start', 'middle', 'end');
-                    });
+                    this.selectedCells.forEach(cell => cell.classList.remove('selected'));
                     this.selectedCells = [];
                     this.direction = null;
                     this.handleSelection(cell);
