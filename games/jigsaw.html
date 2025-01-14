@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Responsive Jigsaw Puzzle</title>
+    <title>Mobile-Friendly Jigsaw Puzzle</title>
     <style>
         * {
             margin: 0;
@@ -50,19 +50,14 @@
             transition: background-color 0.3s;
             flex: 1;
             max-width: 200px;
-            text-align: center;
         }
 
         .button:hover {
             background-color: #0056b3;
         }
 
-        input[type="file"] {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            opacity: 0;
-            overflow: hidden;
+        .file-input {
+            display: none;
         }
 
         .puzzle-container {
@@ -85,17 +80,12 @@
             width: 100%;
             cursor: pointer;
             background-size: 100%;
-            transition: transform 0.2s ease;
         }
 
         .puzzle-piece::before {
             content: '';
             display: block;
             padding-top: 100%;
-        }
-
-        .puzzle-piece:hover {
-            transform: scale(1.05);
         }
 
         .complete-message {
@@ -128,8 +118,8 @@
             <button class="button" onclick="initializePuzzle()">New Puzzle</button>
             <button class="button" onclick="switchImage()">Change Image</button>
             <button class="button" onclick="changeGridSize()">Change Grid Size</button>
-            <label for="fileInput" class="button">Upload Image</label>
-            <input type="file" id="fileInput" accept="image/*" onchange="uploadImage(event)">
+            <label class="button" for="fileInput">Upload Image</label>
+            <input type="file" id="fileInput" class="file-input" accept="image/*" onchange="uploadImage(event)">
         </div>
 
         <div class="puzzle-container">
@@ -196,14 +186,12 @@
                 pieceElement.style.backgroundPosition = `${(col * 100) / (gridSize - 1)}% ${(row * 100) / (gridSize - 1)}%`;
                 pieceElement.style.backgroundSize = `${gridSize * 100}%`;
 
-                pieceElement.addEventListener("touchstart", (e) => handlePieceClick(e, piece));
-                pieceElement.addEventListener("click", (e) => handlePieceClick(e, piece));
+                pieceElement.addEventListener("click", () => handlePieceClick(piece));
                 grid.appendChild(pieceElement);
             });
         }
 
-        function handlePieceClick(event, clickedPiece) {
-            event.preventDefault();
+        function handlePieceClick(clickedPiece) {
             if (!selectedPiece) {
                 selectedPiece = clickedPiece;
             } else if (selectedPiece !== clickedPiece) {
