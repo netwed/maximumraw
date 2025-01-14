@@ -175,22 +175,23 @@
         pieceElement.style.order = piece.currentPos;
 
         const imageUrl = uploadedImage || puzzleImages[currentImage];
-        
-        // Fixed background size calculation for grid size 2
-        const backgroundSizePercent = gridSize === 2 ? 200 : gridSize * 100;
-        const backgroundSize = `${backgroundSizePercent}%`;
+
+        // Calculate background size and position
+        const backgroundWidth = gridSize * 100; // Width in percentage
+        const backgroundHeight = gridSize * 100 * imageAspectRatio; // Adjust for aspect ratio
         
         const x = (piece.correctPos % gridSize) * (100 / (gridSize - 1));
         const y = Math.floor(piece.correctPos / gridSize) * (100 / (gridSize - 1));
-        
+
         pieceElement.style.backgroundImage = `url(${imageUrl})`;
-        pieceElement.style.backgroundSize = backgroundSize;
+        pieceElement.style.backgroundSize = `${backgroundWidth}% ${backgroundHeight}%`;
         pieceElement.style.backgroundPosition = `${x}% ${y}%`;
         pieceElement.style.aspectRatio = "1";
 
         pieceElement.addEventListener("click", () => handlePieceClick(piece));
         grid.appendChild(pieceElement);
     });
+
         }
 
         function handlePieceClick(clickedPiece) {
