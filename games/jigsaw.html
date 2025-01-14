@@ -264,196 +264,204 @@
       </div>
   
       <script>
-          let gridSize = 3;
-          let pieces = [];
-          let selectedPiece = null;
-          let currentImage = 0;
-          let uploadedImage = null;
-          let imageAspectRatio = 1;
-          let moveCount = 0;
-          let startTime = null;
-          let timerInterval = null;
-  
-          const puzzleImages = [
-              "https://www.maximumraw.com/games/noahsark.jpeg",
-              "https://www.maximumraw.com/games/dubai.jpeg"
-          ];
-  
-          function updateStats() {
-              document.getElementById('moveCounter').textContent = `Moves: ${moveCount}`;
-              if (startTime) {
-                  const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                  const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
-                  const seconds = (elapsed % 60).toString().padStart(2, '0');
-                  document.getElementById('timer').textContent = `Time: ${minutes}:${seconds}`;
-              }
-          }
-  
-          function startTimer() {
-              if (timerInterval) clearInterval(timerInterval);
-              startTime = Date.now();
-              timerInterval = setInterval(updateStats, 1000);
-          }
-  
-          function stopTimer() {
-              if (timerInterval) {
-                  clearInterval(timerInterval);
-                  timerInterval = null;
-              }
-          }
-  
-          function createPieces() {
-              pieces = [];
-              const totalPieces = gridSize * gridSize;
-              for (let i = 0; i < totalPieces; i++) {
-                  pieces.push({
-                      id: i,
-                      currentPos: i,
-                      correctPos: i,
-                  });
-              }
-              return pieces;
-          }
-  
-          function shufflePieces() {
-              let shuffled = [...pieces];
-              do {
-                  shuffled.sort(() => Math.random() - 0.5);
-              } while (!isSolvable(shuffled));
-              return shuffled;
-          }
-  
-          function isSolvable(arrangement) {
-              let inversions = 0;
-              for (let i = 0; i < arrangement.length - 1; i++) {
-                  for (let j = i + 1; j < arrangement.length; j++) {
-                      if (arrangement[i].correctPos > arrangement[j].correctPos) {
-                          inversions++;
-                      }
-                  }
-              }
-              return inversions % 2 === 0;
-          }
-  
-          function initializePuzzle() {
-              moveCount = 0;
-              pieces = createPieces();
-              pieces = shufflePieces();
-              pieces.forEach((piece, index) => (piece.currentPos = index));
-              renderPuzzle();
-              document.getElementById("completeMessage").style.display = "none";
-              startTimer();
-              updateStats();
-          }
-  
-          function renderPuzzle() {
-              const grid = document.getElementById("puzzleGrid");
-              grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
-              grid.innerHTML = "";
-  
-              pieces.forEach((piece) => {
-                  const pieceElement = document.createElement("div");
-                  pieceElement.className = "puzzle-piece";
-                  if (selectedPiece === piece) {
-                      pieceElement.classList.add("selected");
-                  }
-                  pieceElement.style.order = piece.currentPos;
-  
-                  const imageUrl = uploadedImage || puzzleImages[currentImage];
-                  const backgroundWidth = gridSize * 100;
-                  const backgroundHeight = gridSize * 100 * imageAspectRatio;
-                  
-                  const x = (piece.correctPos % gridSize) * (100 / (gridSize - 1));
-                  const y = Math.floor(piece.correctPos / gridSize) * (100 / (gridSize - 1));
-  
-                  pieceElement.style.backgroundImage = `url(${imageUrl})`;
-                  pieceElement.style.backgroundSize = `${backgroundWidth}% ${backgroundHeight}%`;
-                  pieceElement.style.backgroundPosition = `${x}% ${y}%`;
-  
-                  pieceElement.addEventListener("click", () => handlePieceClick(piece));
-                  grid.appendChild(pieceElement);
-              });
-          }
-  
-          function handlePieceClick(clickedPiece) {
-              if (selectedPiece === null) {
-                  selectedPiece = clickedPiece;
-                  renderPuzzle();
-              } else {
-                  if (selectedPiece !== clickedPiece) {
-                      swapPieces(selectedPiece, clickedPiece);
-                      moveCount++;
-                      updateStats();
-                  }
-                  selectedPiece = null;
-                  renderPuzzle();
-                  checkCompletion();
-              }
-          }
-  
-          function swapPieces(pieceA, pieceB) {
-              const tempPos = pieceA.currentPos;
-              pieceA.currentPos = pieceB.currentPos;
-              pieceB.currentPos = tempPos;
-          }
-  
-          function checkCompletion() {
-              const isComplete = pieces.every((piece) => piece.currentPos === piece.correctPos);
-              if (isComplete) {
-                  stopTimer();
-                  const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                  const minutes = Math.floor(elapsed / 60);
-                  const seconds = elapsed % 60;
-                  const timeString = `${minutes}m ${seconds}s`;
-                  
-                  const completeMessage = document.getElementById("completeMessage");
-                  document.getElementById("completionStats").innerHTML = 
-                      `Time: ${timeString}<br>Moves: ${moveCount}`;
-                  completeMessage.style.display = "block";
-              }
-          }
-  
-          function switchImage() {
-              currentImage = (currentImage + 1) % puzzleImages.length;
-              uploadedImage = null;
-              imageAspectRatio = 1;
-              initializePuzzle();
-          }
-  
-          function showDifficultySelector() {
-              document.getElementById('modalOverlay').classList.add('active');
-              document.getElementById('difficultySelector').classList.add('active');
-          }
-  
-          function hideDifficultySelector() {
-              document.getElementById('modalOverlay').classList.remove('active');
-              document.getElementById('difficultySelector').classList.remove('active');
-          }
-  
-          function setDifficulty(size) {
-              gridSize = size;
-              hideDifficultySelector();
-              initializePuzzle();
-          }
-  
-          function uploadImage(event) {
-              const file = event.target.files[0];
-              if (file) {
-                  const reader = new FileReader();
-                  reader.onload = (e) => {
-                      const img = new Image();
-                      img.onload = () => {
-                          uploadedImage = e.target.result;
-                          imageAspectRatio = img.height / img.width;
-                          initializePuzzle();
-                      };
-                      img.src = e.target.result;
-                  };
-                  reader.readAsDataURL(file);
-              }
-          }
-  
-          window.onload = initializePuzzle;
-      </script>
+        let gridSize = 3;
+        let pieces = [];
+        let selectedPiece = null;
+        let currentImage = 0;
+        let uploadedImage = null;
+        let imageAspectRatio = 1;
+        let moveCount = 0;
+        let startTime = null;
+        let timerInterval = null;
+        let timerStarted = false;  // Flag to check if the timer has started
+    
+        const puzzleImages = [
+            "https://www.maximumraw.com/games/noahsark.jpeg",
+            "https://www.maximumraw.com/games/dubai.jpeg"
+        ];
+    
+        function updateStats() {
+            document.getElementById('moveCounter').textContent = `Moves: ${moveCount}`;
+            if (startTime) {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const seconds = (elapsed % 60).toString().padStart(2, '0');
+                document.getElementById('timer').textContent = `Time: ${minutes}:${seconds}`;
+            }
+        }
+    
+        function startTimer() {
+            if (!timerStarted) { // Start timer only if it hasn't started yet
+                if (timerInterval) clearInterval(timerInterval);
+                startTime = Date.now();
+                timerInterval = setInterval(updateStats, 1000);
+                timerStarted = true; // Mark timer as started
+            }
+        }
+    
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+    
+        function createPieces() {
+            pieces = [];
+            const totalPieces = gridSize * gridSize;
+            for (let i = 0; i < totalPieces; i++) {
+                pieces.push({
+                    id: i,
+                    currentPos: i,
+                    correctPos: i,
+                });
+            }
+            return pieces;
+        }
+    
+        function shufflePieces() {
+            let shuffled = [...pieces];
+            do {
+                shuffled.sort(() => Math.random() - 0.5);
+            } while (!isSolvable(shuffled));
+            return shuffled;
+        }
+    
+        function isSolvable(arrangement) {
+            let inversions = 0;
+            for (let i = 0; i < arrangement.length - 1; i++) {
+                for (let j = i + 1; j < arrangement.length; j++) {
+                    if (arrangement[i].correctPos > arrangement[j].correctPos) {
+                        inversions++;
+                    }
+                }
+            }
+            return inversions % 2 === 0;
+        }
+    
+        function initializePuzzle() {
+            moveCount = 0;
+            pieces = createPieces();
+            pieces = shufflePieces();
+            pieces.forEach((piece, index) => (piece.currentPos = index));
+            renderPuzzle();
+            document.getElementById("completeMessage").style.display = "none";
+            updateStats();
+        }
+    
+        function renderPuzzle() {
+            const grid = document.getElementById("puzzleGrid");
+            grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+            grid.innerHTML = "";
+    
+            pieces.forEach((piece) => {
+                const pieceElement = document.createElement("div");
+                pieceElement.className = "puzzle-piece";
+                if (selectedPiece === piece) {
+                    pieceElement.classList.add("selected");
+                }
+                pieceElement.style.order = piece.currentPos;
+    
+                const imageUrl = uploadedImage || puzzleImages[currentImage];
+                const backgroundWidth = gridSize * 100;
+                const backgroundHeight = gridSize * 100 * imageAspectRatio;
+    
+                const x = (piece.correctPos % gridSize) * (100 / (gridSize - 1));
+                const y = Math.floor(piece.correctPos / gridSize) * (100 / (gridSize - 1));
+    
+                pieceElement.style.backgroundImage = `url(${imageUrl})`;
+                pieceElement.style.backgroundSize = `${backgroundWidth}% ${backgroundHeight}%`;
+                pieceElement.style.backgroundPosition = `${x}% ${y}%`;
+    
+                pieceElement.addEventListener("click", () => handlePieceClick(piece));
+                grid.appendChild(pieceElement);
+            });
+        }
+    
+        function handlePieceClick(clickedPiece) {
+            if (!timerStarted) {  // Start the timer on first interaction
+                startTimer();
+            }
+    
+            if (selectedPiece === null) {
+                selectedPiece = clickedPiece;
+                renderPuzzle();
+            } else {
+                if (selectedPiece !== clickedPiece) {
+                    swapPieces(selectedPiece, clickedPiece);
+                    moveCount++;
+                    updateStats();
+                }
+                selectedPiece = null;
+                renderPuzzle();
+                checkCompletion();
+            }
+        }
+    
+        function swapPieces(pieceA, pieceB) {
+            const tempPos = pieceA.currentPos;
+            pieceA.currentPos = pieceB.currentPos;
+            pieceB.currentPos = tempPos;
+        }
+    
+        function checkCompletion() {
+            const isComplete = pieces.every((piece) => piece.currentPos === piece.correctPos);
+            if (isComplete) {
+                stopTimer();
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                const timeString = `${minutes}m ${seconds}s`;
+    
+                const completeMessage = document.getElementById("completeMessage");
+                document.getElementById("completionStats").innerHTML =
+                    `Time: ${timeString}<br>Moves: ${moveCount}`;
+                completeMessage.style.display = "block";
+            }
+        }
+    
+        function switchImage() {
+            currentImage = (currentImage + 1) % puzzleImages.length;
+            uploadedImage = null;
+            imageAspectRatio = 1;
+            initializePuzzle();
+        }
+    
+        function showDifficultySelector() {
+            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('difficultySelector').classList.add('active');
+        }
+    
+        function hideDifficultySelector() {
+            document.getElementById('modalOverlay').classList.remove('active');
+            document.getElementById('difficultySelector').classList.remove('active');
+        }
+    
+        function setDifficulty(size) {
+            gridSize = size;
+            hideDifficultySelector();
+            initializePuzzle();
+        }
+    
+        function uploadImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        uploadedImage = e.target.result;
+                        imageAspectRatio = img.height / img.width;
+                        initializePuzzle();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    
+        window.onload = initializePuzzle;
+    </script>
+    
 </body>
 </html>
