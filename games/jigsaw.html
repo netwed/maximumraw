@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Responsive Jigsaw Puzzle</title>
+    <title>Enhanced Jigsaw Puzzle</title>
     <style>
         * {
             margin: 0;
@@ -12,52 +12,84 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
+            font-family: system-ui, -apple-system, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #f9f9f9;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 1rem;
         }
 
         .container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 1rem;
+            gap: 1.5rem;
             width: 100%;
-            max-width: 600px;
+            max-width: 800px;
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .game-header {
+            text-align: center;
+            width: 100%;
+        }
+
+        .game-title {
+            font-size: 2rem;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            font-size: 1.1rem;
+            color: #4a5568;
         }
 
         .controls {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.5rem;
+            gap: 0.75rem;
             width: 100%;
             justify-content: center;
         }
 
         .button, .upload-label {
-            padding: 0.75rem 1rem;
-            background-color: #007BFF;
-            color: #fff;
+            padding: 0.75rem 1.25rem;
+            color: white;
             border: none;
-            border-radius: 0.375rem;
+            border-radius: 0.5rem;
             font-size: 1rem;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.2s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
         .button:hover {
-            background-color: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .button:active {
+            transform: translateY(0);
         }
 
         .upload-label {
-            background-color: #28a745;
-        }
-
-        .upload-label:hover {
-            background-color: #218838;
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
         }
 
         .file-input {
@@ -66,11 +98,12 @@
 
         .puzzle-container {
             width: 100%;
-            aspect-ratio: 1; /* Keeps the container square */
+            aspect-ratio: 1;
             position: relative;
             overflow: hidden;
-            background-color: #ddd;
-            border-radius: 0.5rem;
+            background: #f7fafc;
+            border-radius: 1rem;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .puzzle-grid {
@@ -81,38 +114,116 @@
             width: 100%;
             height: 100%;
             gap: 2px;
+            padding: 4px;
         }
 
         .puzzle-piece {
             position: relative;
             background-repeat: no-repeat;
-            background-size: 100%;
+            background-size: cover;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: all 0.3s;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .puzzle-piece:hover {
-            transform: scale(1.05);
+        .puzzle-piece.selected {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 3px #4299e1;
+            z-index: 10;
+        }
+
+        .puzzle-piece:hover:not(.selected) {
+            transform: scale(1.02);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
         .complete-message {
-            color: #28a745;
+            color: #2f855a;
             font-weight: bold;
             text-align: center;
             padding: 1rem;
-            background-color: #d4edda;
-            border-radius: 0.375rem;
+            background-color: #c6f6d5;
+            border-radius: 0.75rem;
             width: 100%;
             display: none;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .difficulty-selector {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            gap: 1rem;
+            z-index: 100;
+        }
+
+        .difficulty-selector.active {
+            display: flex;
+        }
+
+        .difficulty-button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            background: #edf2f7;
+            color: #2d3748;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .difficulty-button:hover {
+            background: #e2e8f0;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 99;
+        }
+
+        .modal-overlay.active {
+            display: block;
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <div class="game-header">
+            <h1 class="game-title">Jigsaw Puzzle</h1>
+            <div class="game-stats">
+                <div id="moveCounter">Moves: 0</div>
+                <div id="timer">Time: 00:00</div>
+            </div>
+        </div>
+
         <div class="controls">
             <button class="button" onclick="initializePuzzle()">New Puzzle</button>
             <button class="button" onclick="switchImage()">Change Image</button>
-            <button class="button" onclick="changeGridSize()">Change Grid Size</button>
+            <button class="button" onclick="showDifficultySelector()">Change Difficulty</button>
             <label for="fileInput" class="upload-label">Upload Image</label>
             <input type="file" id="fileInput" class="file-input" accept="image/*" onchange="uploadImage(event)">
         </div>
@@ -122,22 +233,58 @@
         </div>
 
         <div class="complete-message" id="completeMessage">
-            Congratulations! Puzzle Complete! 🎉
+            🎉 Congratulations! Puzzle Complete! 🎉
+            <div id="completionStats"></div>
         </div>
     </div>
 
+    <div class="modal-overlay" id="modalOverlay"></div>
+    <div class="difficulty-selector" id="difficultySelector">
+        <button class="difficulty-button" onclick="setDifficulty(2)">Easy (2x2)</button>
+        <button class="difficulty-button" onclick="setDifficulty(3)">Medium (3x3)</button>
+        <button class="difficulty-button" onclick="setDifficulty(4)">Hard (4x4)</button>
+        <button class="difficulty-button" onclick="setDifficulty(5)">Expert (5x5)</button>
+        <button class="difficulty-button" onclick="hideDifficultySelector()">Cancel</button>
+    </div>
+
     <script>
-        let gridSize = 4;
+        let gridSize = 3;
         let pieces = [];
         let selectedPiece = null;
         let currentImage = 0;
         let uploadedImage = null;
-        let imageAspectRatio = 1; // Default square
+        let imageAspectRatio = 1;
+        let moveCount = 0;
+        let startTime = null;
+        let timerInterval = null;
 
         const puzzleImages = [
             "https://www.maximumraw.com/games/noahsark.jpeg",
             "https://www.maximumraw.com/games/dubai.jpeg"
         ];
+
+        function updateStats() {
+            document.getElementById('moveCounter').textContent = `Moves: ${moveCount}`;
+            if (startTime) {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const seconds = (elapsed % 60).toString().padStart(2, '0');
+                document.getElementById('timer').textContent = `Time: ${minutes}:${seconds}`;
+            }
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            startTime = Date.now();
+            timerInterval = setInterval(updateStats, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
 
         function createPieces() {
             pieces = [];
@@ -153,53 +300,77 @@
         }
 
         function shufflePieces() {
-            return [...pieces].sort(() => Math.random() - 0.5);
+            let shuffled = [...pieces];
+            do {
+                shuffled.sort(() => Math.random() - 0.5);
+            } while (!isSolvable(shuffled));
+            return shuffled;
+        }
+
+        function isSolvable(arrangement) {
+            let inversions = 0;
+            for (let i = 0; i < arrangement.length - 1; i++) {
+                for (let j = i + 1; j < arrangement.length; j++) {
+                    if (arrangement[i].correctPos > arrangement[j].correctPos) {
+                        inversions++;
+                    }
+                }
+            }
+            return inversions % 2 === 0;
         }
 
         function initializePuzzle() {
+            moveCount = 0;
             pieces = createPieces();
             pieces = shufflePieces();
             pieces.forEach((piece, index) => (piece.currentPos = index));
             renderPuzzle();
             document.getElementById("completeMessage").style.display = "none";
+            startTimer();
+            updateStats();
         }
 
         function renderPuzzle() {
-    const grid = document.getElementById("puzzleGrid");
-    grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
-    grid.innerHTML = "";
+            const grid = document.getElementById("puzzleGrid");
+            grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+            grid.innerHTML = "";
 
-    pieces.forEach((piece) => {
-        const pieceElement = document.createElement("div");
-        pieceElement.className = "puzzle-piece";
-        pieceElement.style.order = piece.currentPos;
+            pieces.forEach((piece) => {
+                const pieceElement = document.createElement("div");
+                pieceElement.className = "puzzle-piece";
+                if (selectedPiece === piece) {
+                    pieceElement.classList.add("selected");
+                }
+                pieceElement.style.order = piece.currentPos;
 
-        const imageUrl = uploadedImage || puzzleImages[currentImage];
+                const imageUrl = uploadedImage || puzzleImages[currentImage];
+                const backgroundWidth = gridSize * 100;
+                const backgroundHeight = gridSize * 100 * imageAspectRatio;
+                
+                const x = (piece.correctPos % gridSize) * (100 / (gridSize - 1));
+                const y = Math.floor(piece.correctPos / gridSize) * (100 / (gridSize - 1));
 
-        // Calculate background size and position
-        const backgroundWidth = gridSize * 100; // Width in percentage
-        const backgroundHeight = gridSize * 100 * imageAspectRatio; // Adjust for aspect ratio
-        
-        const x = (piece.correctPos % gridSize) * (100 / (gridSize - 1));
-        const y = Math.floor(piece.correctPos / gridSize) * (100 / (gridSize - 1));
+                pieceElement.style.backgroundImage = `url(${imageUrl})`;
+                pieceElement.style.backgroundSize = `${backgroundWidth}% ${backgroundHeight}%`;
+                pieceElement.style.backgroundPosition = `${x}% ${y}%`;
 
-        pieceElement.style.backgroundImage = `url(${imageUrl})`;
-        pieceElement.style.backgroundSize = `${backgroundWidth}% ${backgroundHeight}%`;
-        pieceElement.style.backgroundPosition = `${x}% ${y}%`;
-        pieceElement.style.aspectRatio = "1";
-
-        pieceElement.addEventListener("click", () => handlePieceClick(piece));
-        grid.appendChild(pieceElement);
-    });
-
+                pieceElement.addEventListener("click", () => handlePieceClick(piece));
+                grid.appendChild(pieceElement);
+            });
         }
 
         function handlePieceClick(clickedPiece) {
             if (selectedPiece === null) {
                 selectedPiece = clickedPiece;
-            } else if (selectedPiece !== clickedPiece) {
-                swapPieces(selectedPiece, clickedPiece);
+                renderPuzzle();
+            } else {
+                if (selectedPiece !== clickedPiece) {
+                    swapPieces(selectedPiece, clickedPiece);
+                    moveCount++;
+                    updateStats();
+                }
                 selectedPiece = null;
+                renderPuzzle();
                 checkCompletion();
             }
         }
@@ -208,26 +379,44 @@
             const tempPos = pieceA.currentPos;
             pieceA.currentPos = pieceB.currentPos;
             pieceB.currentPos = tempPos;
-            renderPuzzle();
         }
 
         function checkCompletion() {
             const isComplete = pieces.every((piece) => piece.currentPos === piece.correctPos);
             if (isComplete) {
-                document.getElementById("completeMessage").style.display = "block";
+                stopTimer();
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                const timeString = `${minutes}m ${seconds}s`;
+                
+                const completeMessage = document.getElementById("completeMessage");
+                document.getElementById("completionStats").innerHTML = 
+                    `Time: ${timeString}<br>Moves: ${moveCount}`;
+                completeMessage.style.display = "block";
             }
         }
 
         function switchImage() {
             currentImage = (currentImage + 1) % puzzleImages.length;
             uploadedImage = null;
-            imageAspectRatio = 1; // Reset aspect ratio for default images
+            imageAspectRatio = 1;
             initializePuzzle();
         }
 
-        function changeGridSize() {
-            const newSize = prompt("Enter new grid size (2-10):", gridSize);
-            gridSize = Math.max(2, Math.min(10, parseInt(newSize, 10)));
+        function showDifficultySelector() {
+            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('difficultySelector').classList.add('active');
+        }
+
+        function hideDifficultySelector() {
+            document.getElementById('modalOverlay').classList.remove('active');
+            document.getElementById('difficultySelector').classList.remove('active');
+        }
+
+        function setDifficulty(size) {
+            gridSize = size;
+            hideDifficultySelector();
             initializePuzzle();
         }
 
@@ -239,7 +428,7 @@
                     const img = new Image();
                     img.onload = () => {
                         uploadedImage = e.target.result;
-                        imageAspectRatio = img.width / img.height;
+                        imageAspectRatio = img.height / img.width;
                         initializePuzzle();
                     };
                     img.src = e.target.result;
