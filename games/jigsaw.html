@@ -165,32 +165,32 @@
         }
 
         function renderPuzzle() {
-            const grid = document.getElementById("puzzleGrid");
-            grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
-            grid.innerHTML = "";
+    const grid = document.getElementById("puzzleGrid");
+    grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+    grid.innerHTML = "";
 
-            pieces.forEach((piece) => {
-                const pieceElement = document.createElement("div");
-                pieceElement.className = "puzzle-piece";
-                pieceElement.style.order = piece.currentPos;
+    pieces.forEach((piece) => {
+        const pieceElement = document.createElement("div");
+        pieceElement.className = "puzzle-piece";
+        pieceElement.style.order = piece.currentPos;
 
-                const imageUrl = uploadedImage || puzzleImages[currentImage];
-                const backgroundSize = imageAspectRatio >= 1
-                    ? `${gridSize * 100}% auto`
-                    : `auto ${gridSize * 100}%`;
-                
-                const x = (piece.correctPos % gridSize) * (100 / (gridSize - 1));
-                const y = Math.floor(piece.correctPos / gridSize) * (100 / (gridSize - 1));
-                const backgroundPosition = `${x}% ${y}%`;
+        const imageUrl = uploadedImage || puzzleImages[currentImage];
+        
+        // Calculate background size based on grid size
+        const backgroundSize = `${gridSize * 100}%`;
+        
+        // Fix background position calculation
+        const x = (piece.correctPos % gridSize) * (100 / (gridSize - 1));
+        const y = Math.floor(piece.correctPos / gridSize) * (100 / (gridSize - 1));
+        
+        pieceElement.style.backgroundImage = `url(${imageUrl})`;
+        pieceElement.style.backgroundSize = backgroundSize;
+        pieceElement.style.backgroundPosition = `${x}% ${y}%`;
+        pieceElement.style.aspectRatio = "1";
 
-                pieceElement.style.backgroundImage = `url(${imageUrl})`;
-                pieceElement.style.backgroundSize = backgroundSize;
-                pieceElement.style.backgroundPosition = backgroundPosition;
-                pieceElement.style.aspectRatio = "1"; // Keep pieces square
-
-                pieceElement.addEventListener("click", () => handlePieceClick(piece));
-                grid.appendChild(pieceElement);
-            });
+        pieceElement.addEventListener("click", () => handlePieceClick(piece));
+        grid.appendChild(pieceElement);
+    });
         }
 
         function handlePieceClick(clickedPiece) {
