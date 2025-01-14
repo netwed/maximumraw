@@ -176,10 +176,10 @@
 
         const imageUrl = uploadedImage || puzzleImages[currentImage];
         
-        // Calculate background size based on grid size
-        const backgroundSize = `${gridSize * 100}%`;
+        // Fixed background size calculation for grid size 2
+        const backgroundSizePercent = gridSize === 2 ? 200 : gridSize * 100;
+        const backgroundSize = `${backgroundSizePercent}%`;
         
-        // Fix background position calculation
         const x = (piece.correctPos % gridSize) * (100 / (gridSize - 1));
         const y = Math.floor(piece.correctPos / gridSize) * (100 / (gridSize - 1));
         
