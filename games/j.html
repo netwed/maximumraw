@@ -44,6 +44,7 @@
             font-size: 1rem;
             cursor: pointer;
             transition: background-color 0.3s, transform 0.2s;
+            text-align: center;
         }
 
         .button {
@@ -72,6 +73,15 @@
             display: none;
         }
 
+        .status {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #333;
+        }
+
         .puzzle-container {
             width: 100%;
             aspect-ratio: 1;
@@ -79,6 +89,7 @@
             overflow: hidden;
             background-color: #ddd;
             border-radius: 0.5rem;
+            touch-action: manipulation;
         }
 
         .puzzle-grid {
@@ -94,11 +105,11 @@
         .puzzle-piece {
             background-size: 100%;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: transform 0.1s;
         }
 
-        .puzzle-piece:hover {
-            transform: scale(1.05);
+        .puzzle-piece:active {
+            transform: scale(0.95);
         }
 
         .complete-message {
@@ -112,17 +123,14 @@
             width: 100%;
         }
 
-        .timer {
-            font-size: 1.25rem;
-            font-weight: bold;
-            color: #333;
-            margin-top: 1rem;
-        }
-
         @media (max-width: 480px) {
             .button, .upload-label {
                 font-size: 0.875rem;
                 padding: 0.5rem;
+            }
+
+            .status {
+                font-size: 1rem;
             }
         }
     </style>
@@ -137,6 +145,11 @@
             <input type="file" id="fileInput" class="file-input" accept="image/*" onchange="uploadImage(event)">
         </div>
 
+        <div class="status">
+            <div id="timer">Time: 0s</div>
+            <div id="moveCounter">Moves: 0</div>
+        </div>
+
         <div class="puzzle-container">
             <div class="puzzle-grid" id="puzzleGrid"></div>
         </div>
@@ -144,8 +157,6 @@
         <div class="complete-message" id="completeMessage">
             Congratulations! Puzzle Complete! 🎉
         </div>
-
-        <div class="timer" id="timer">Time: 0s</div>
     </div>
 
     <script>
@@ -155,6 +166,7 @@
         let currentImageIndex = 0;
         let timerInterval;
         let seconds = 0;
+        let moveCount = 0;
         let puzzleStarted = false;
 
         const puzzleImages = [
@@ -196,8 +208,7 @@
             pieces.forEach((piece, index) => (piece.currentPos = index));
             renderPuzzle();
             document.getElementById("completeMessage").style.display = "none";
-            resetTimer();
-            startTimer();
+            resetTimerAndMoves();
         }
 
         function renderPuzzle() {
@@ -221,7 +232,11 @@
                 pieceElement.style.backgroundPosition = `${x}% ${y}%`;
                 pieceElement.style.aspectRatio = "1";
 
-                pieceElement.addEventListener("click", () => handlePieceClick(piece));
+                pieceElement.addEventListener("click", () => {
+                    startTimer();
+                    handlePieceClick(piece);
+                });
+
                 grid.appendChild(pieceElement);
             });
         }
@@ -232,6 +247,7 @@
             } else if (selectedPiece !== clickedPiece) {
                 swapPieces(selectedPiece, clickedPiece);
                 selectedPiece = null;
+                incrementMoveCounter();
                 checkCompletion();
             }
         }
@@ -275,11 +291,18 @@
             }
         }
 
-        function resetTimer() {
+        function resetTimerAndMoves() {
             clearInterval(timerInterval);
             seconds = 0;
+            moveCount = 0;
             puzzleStarted = false;
             document.getElementById("timer").textContent = "Time: 0s";
+            document.getElementById("moveCounter").textContent = "Moves: 0";
+        }
+
+        function incrementMoveCounter() {
+            moveCount++;
+            document.getElementById("moveCounter").textContent = `Moves: ${moveCount}`;
         }
 
         window.onload = initializePuzzle;
