@@ -345,33 +345,34 @@
               startTimer();
               updateStats();
           }
-
+  
           function renderPuzzle() {
-            const grid = document.getElementById("puzzleGrid");
-            grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
-            grid.innerHTML = "";
-
-            pieces.forEach((piece) => {
-                const pieceElement = document.createElement("div");
-                pieceElement.className = "puzzle-piece";
-                pieceElement.style.order = piece.currentPos;
-
-                const imageUrl = uploadedImage || puzzleImages[currentImage];
-                pieceElement.style.backgroundImage = `url(${imageUrl})`;
-
-                // Adjust background size and position
-                const sizePercentage = 100 * gridSize;
-                const x = (piece.correctPos % gridSize) * (100 / (gridSize - 1));
-                const y = Math.floor(piece.correctPos / gridSize) * (100 / (gridSize - 1));
-
-                pieceElement.style.backgroundSize = `${sizePercentage}% ${sizePercentage}%`;
-                pieceElement.style.backgroundPosition = `${x}% ${y}%`;
-                pieceElement.style.aspectRatio = "1"; // Keep pieces square
-
-                pieceElement.addEventListener("click", () => handlePieceClick(piece));
-                grid.appendChild(pieceElement);
-            });
-            
+              const grid = document.getElementById("puzzleGrid");
+              grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+              grid.innerHTML = "";
+  
+              pieces.forEach((piece) => {
+                  const pieceElement = document.createElement("div");
+                  pieceElement.className = "puzzle-piece";
+                  if (selectedPiece === piece) {
+                      pieceElement.classList.add("selected");
+                  }
+                  pieceElement.style.order = piece.currentPos;
+  
+                  const imageUrl = uploadedImage || puzzleImages[currentImage];
+                  const backgroundWidth = gridSize * 100;
+                  const backgroundHeight = gridSize * 100 * imageAspectRatio;
+                  
+                  const x = (piece.correctPos % gridSize) * (100 / (gridSize - 1));
+                  const y = Math.floor(piece.correctPos / gridSize) * (100 / (gridSize - 1));
+  
+                  pieceElement.style.backgroundImage = `url(${imageUrl})`;
+                  pieceElement.style.backgroundSize = `${backgroundWidth}% ${backgroundHeight}%`;
+                  pieceElement.style.backgroundPosition = `${x}% ${y}%`;
+  
+                  pieceElement.addEventListener("click", () => handlePieceClick(piece));
+                  grid.appendChild(pieceElement);
+              });
           }
   
           function handlePieceClick(clickedPiece) {
