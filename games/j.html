@@ -43,7 +43,7 @@
             border-radius: 0.375rem;
             font-size: 1rem;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, transform 0.2s;
         }
 
         .button {
@@ -54,6 +54,7 @@
 
         .button:hover {
             background-color: #0056b3;
+            transform: scale(1.05);
         }
 
         .upload-label {
@@ -64,6 +65,7 @@
 
         .upload-label:hover {
             background-color: #218838;
+            transform: scale(1.05);
         }
 
         .file-input {
@@ -110,6 +112,13 @@
             width: 100%;
         }
 
+        .timer {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #333;
+            margin-top: 1rem;
+        }
+
         @media (max-width: 480px) {
             .button, .upload-label {
                 font-size: 0.875rem;
@@ -135,6 +144,8 @@
         <div class="complete-message" id="completeMessage">
             Congratulations! Puzzle Complete! 🎉
         </div>
+
+        <div class="timer" id="timer">Time: 0s</div>
     </div>
 
     <script>
@@ -142,6 +153,9 @@
         let pieces = [];
         let selectedPiece = null;
         let currentImageIndex = 0;
+        let timerInterval;
+        let seconds = 0;
+        let puzzleStarted = false;
 
         const puzzleImages = [
             "https://www.maximumraw.com/games/noahsark.jpeg",
@@ -166,12 +180,24 @@
             return [...pieces].sort(() => Math.random() - 0.5);
         }
 
+        function startTimer() {
+            if (!puzzleStarted) {
+                puzzleStarted = true;
+                timerInterval = setInterval(() => {
+                    seconds++;
+                    document.getElementById("timer").textContent = `Time: ${seconds}s`;
+                }, 1000);
+            }
+        }
+
         function initializePuzzle() {
             pieces = createPieces();
             pieces = shufflePieces();
             pieces.forEach((piece, index) => (piece.currentPos = index));
             renderPuzzle();
             document.getElementById("completeMessage").style.display = "none";
+            resetTimer();
+            startTimer();
         }
 
         function renderPuzzle() {
@@ -220,6 +246,7 @@
         function checkCompletion() {
             const isComplete = pieces.every((piece) => piece.currentPos === piece.correctPos);
             if (isComplete) {
+                clearInterval(timerInterval);
                 document.getElementById("completeMessage").style.display = "block";
             }
         }
@@ -246,6 +273,13 @@
                 };
                 reader.readAsDataURL(file);
             }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            seconds = 0;
+            puzzleStarted = false;
+            document.getElementById("timer").textContent = "Time: 0s";
         }
 
         window.onload = initializePuzzle;
