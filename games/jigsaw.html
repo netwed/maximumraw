@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jigsaw Puzzle Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .button {
+            padding: 0.5rem 1rem;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background-color 0.2s;
+        }
+
+        .button:hover {
+            background-color: #1d4ed8;
+        }
+
+        .puzzle-container {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .puzzle-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 2px;
+            background-color: #e5e7eb;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+        }
+
+        .puzzle-piece {
+            width: 100px;
+            height: 100px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            background-size: 500px 500px;
+        }
+
+        .puzzle-piece:hover {
+            transform: scale(1.02);
+        }
+
+        .puzzle-piece.selected {
+            box-shadow: 0 0 0 2px #2563eb;
+        }
+
+        .complete-message {
+            color: #16a34a;
+            font-weight: bold;
+            margin-top: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <button class="button" onclick="initializePuzzle()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                New Puzzle
+            </button>
+            <button class="button" onclick="switchImage()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Change Image
+            </button>
+        </div>
+
+        <div class="puzzle-container">
+            <div class="puzzle-grid" id="puzzleGrid"></div>
+        </div>
+
+        <div class="complete-message" id="completeMessage">
+            Congratulations! Puzzle Complete!
+        </div>
+    </div>
+
+    <script>
+        const GRID_SIZE = 5;
+        const PIECE_SIZE = 100;
+        let pieces = [];
+        let selectedPiece = null;
+        let currentImage = 0;
+
+        const puzzleImages = [
+            "https://www.maximumraw.com/games/noahsark.jepg",
+            "https://www.maximumraw.com/games/dubai.jepg",
+            "/api/placeholder/500/500"
+        ];
+
+        function createPieces() {
+            pieces = [];
+            const totalPieces = GRID_SIZE * GRID_SIZE;
+            
+            for (let i = 0; i < totalPieces; i++) {
+                pieces.push({
+                    id: i,
+                    currentPos: i,
+                    correctPos: i,
+                    backgroundPos: {
+                        x: -(i % GRID_SIZE) * PIECE_SIZE,
+                        y: -Math.floor(i / GRID_SIZE) * PIECE_SIZE
+                    }
+                });
+            }
+            return pieces;
+        }
+
+        function shufflePieces() {
+            return [...pieces].sort(() => Math.random() - 0.5);
+        }
+
+        function initializePuzzle() {
+            pieces = createPieces();
+            pieces = shufflePieces();
+            pieces.forEach((piece, index) => {
+                piece.currentPos = index;
+            });
+            renderPuzzle();
+            document.getElementById('completeMessage').style.display = 'none';
+        }
+
+        function renderPuzzle() {
+            const grid = document.getElementById('puzzleGrid');
+            grid.innerHTML = '';
+            
+            pieces.forEach((piece, index) => {
+                const pieceElement = document.createElement('div');
+                pieceElement.className = 'puzzle-piece';
+                pieceElement.style.backgroundImage = `url(${puzzleImages[currentImage]})`;
+                pieceElement.style.backgroundPosition = `${piece.backgroundPos.x}px ${piece.backgroundPos.y}px`;
+                pieceElement.onclick = () => handlePieceClick(index);
+                grid.appendChild(pieceElement);
+            });
+        }
+
+        function handlePieceClick(index) {
+            const pieces = document.querySelectorAll('.puzzle-piece');
+            
+            if (selectedPiece === null) {
+                selectedPiece = index;
+                pieces[index].classList.add('selected');
+            } else {
+                // Swap pieces
+                const temp = pieces[selectedPiece].style.backgroundPosition;
+                pieces[selectedPiece].style.backgroundPosition = pieces[index].style.backgroundPosition;
+                pieces[index].style.backgroundPosition = temp;
+
+                const tempPiece = pieces[selectedPiece];
+                pieces[selectedPiece].classList.remove('selected');
+                
+                // Update pieces array
+                const tempData = pieces[selectedPiece];
+                pieces[selectedPiece] = pieces[index];
+                pieces[index] = tempData;
+
+                selectedPiece = null;
+                
+                // Check if puzzle is complete
+                checkCompletion();
+            }
+        }
+
+        function checkCompletion() {
+            const isComplete = pieces.every((piece, index) => {
+                const currentPos = piece.backgroundPos;
+                const correctPos = {
+                    x: -(index % GRID_SIZE) * PIECE_SIZE,
+                    y: -Math.floor(index / GRID_SIZE) * PIECE_SIZE
+                };
+                return currentPos.x === correctPos.x && currentPos.y === correctPos.y;
+            });
+
+            if (isComplete) {
+                document.getElementById('completeMessage').style.display = 'block';
+            }
+        }
+
+        function switchImage() {
+            currentImage = (currentImage + 1) % puzzleImages.length;
+            initializePuzzle();
+        }
+
+        // Initialize the puzzle when the page loads
+        window.onload = initializePuzzle;
+    </script>
+</body>
+</html>
