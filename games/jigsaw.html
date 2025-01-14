@@ -9,6 +9,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -18,6 +19,7 @@
             align-items: center;
             min-height: 100vh;
             background-color: #f0f0f0;
+            padding: 1rem;
         }
 
         .container {
@@ -25,26 +27,29 @@
             flex-direction: column;
             align-items: center;
             gap: 1rem;
+            width: 100%;
+            max-width: 600px;
         }
 
         .controls {
             display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            width: 100%;
+            justify-content: center;
         }
 
         .button {
-            padding: 0.5rem 1rem;
+            padding: 0.75rem 1rem;
             background-color: #2563eb;
             color: white;
             border: none;
             border-radius: 0.375rem;
             cursor: pointer;
-            font-size: 0.875rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            font-size: 1rem;
             transition: background-color 0.2s;
+            flex: 1;
+            max-width: 200px;
         }
 
         .button:hover {
@@ -53,14 +58,14 @@
 
         .puzzle-container {
             background-color: white;
-            padding: 1rem;
+            padding: 0.5rem;
             border-radius: 0.5rem;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            width: 100%;
         }
 
         .puzzle-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
             gap: 2px;
             background-color: #e5e7eb;
             padding: 0.5rem;
@@ -68,19 +73,24 @@
         }
 
         .puzzle-piece {
-            width: 100px;
-            height: 100px;
+            width: 100%;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
-            background-size: 500px 500px;
+            background-size: 100%;
+        }
+
+        .puzzle-piece::before {
+            content: '';
+            display: block;
+            padding-top: 100%;
         }
 
         .puzzle-piece:hover {
-            transform: scale(1.02);
+            transform: scale(1.05);
         }
 
         .puzzle-piece.selected {
-            box-shadow: 0 0 0 2px #2563eb;
+            box-shadow: 0 0 0 3px #2563eb;
         }
 
         .complete-message {
@@ -88,24 +98,35 @@
             font-weight: bold;
             margin-top: 1rem;
             display: none;
+            text-align: center;
+            padding: 1rem;
+            background-color: #dcfce7;
+            border-radius: 0.375rem;
+            width: 100%;
+        }
+
+        @media (max-width: 480px) {
+            .controls {
+                gap: 0.25rem;
+            }
+
+            .button {
+                padding: 0.5rem;
+                font-size: 0.875rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="controls">
-            <button class="button" onclick="initializePuzzle()">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                </svg>
-                New Puzzle
-            </button>
-            <button class="button" onclick="switchImage()">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-                Change Image
-            </button>
+            <button class="button" onclick="initializePuzzle()">New Puzzle</button>
+            <button class="button" onclick="switchImage()">Change Image</button>
+            <button class="button" onclick="changeGridSize()">Change Grid Size</button>
+            <label class="button">
+                <input type="file" accept="image/*" style="display: none;" onchange="uploadImage(event)">
+                Upload Image
+            </label>
         </div>
 
         <div class="puzzle-container">
@@ -113,36 +134,29 @@
         </div>
 
         <div class="complete-message" id="completeMessage">
-            Congratulations! Puzzle Complete!
+            Congratulations! Puzzle Complete! 🎉
         </div>
     </div>
 
     <script>
-        const GRID_SIZE = 5;
-        const PIECE_SIZE = 100;
+        let gridSize = 4;
         let pieces = [];
         let selectedPiece = null;
         let currentImage = 0;
 
         const puzzleImages = [
             "https://www.maximumraw.com/games/noahsark.jpeg",
-            "https://www.maximumraw.com/games/dubai.jpeg",
-            "/api/placeholder/500/500"
+            "https://www.maximumraw.com/games/dubai.jpeg"
         ];
 
         function createPieces() {
             pieces = [];
-            const totalPieces = GRID_SIZE * GRID_SIZE;
-            
+            const totalPieces = gridSize * gridSize;
             for (let i = 0; i < totalPieces; i++) {
                 pieces.push({
                     id: i,
                     currentPos: i,
                     correctPos: i,
-                    backgroundPos: {
-                        x: -(i % GRID_SIZE) * PIECE_SIZE,
-                        y: -Math.floor(i / GRID_SIZE) * PIECE_SIZE
-                    }
                 });
             }
             return pieces;
@@ -155,66 +169,59 @@
         function initializePuzzle() {
             pieces = createPieces();
             pieces = shufflePieces();
-            pieces.forEach((piece, index) => {
-                piece.currentPos = index;
-            });
+            pieces.forEach((piece, index) => (piece.currentPos = index));
             renderPuzzle();
-            document.getElementById('completeMessage').style.display = 'none';
+            document.getElementById("completeMessage").style.display = "none";
         }
 
         function renderPuzzle() {
-            const grid = document.getElementById('puzzleGrid');
-            grid.innerHTML = '';
-            
-            pieces.forEach((piece, index) => {
-                const pieceElement = document.createElement('div');
-                pieceElement.className = 'puzzle-piece';
+            const grid = document.getElementById("puzzleGrid");
+            grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+            grid.innerHTML = "";
+
+            pieces.forEach((piece) => {
+                const pieceElement = document.createElement("div");
+                pieceElement.className = "puzzle-piece";
+                pieceElement.style.order = piece.currentPos;
                 pieceElement.style.backgroundImage = `url(${puzzleImages[currentImage]})`;
-                pieceElement.style.backgroundPosition = `${piece.backgroundPos.x}px ${piece.backgroundPos.y}px`;
-                pieceElement.onclick = () => handlePieceClick(index);
+                pieceElement.style.backgroundPosition = getBackgroundPosition(piece.correctPos);
+                pieceElement.style.backgroundSize = `${gridSize * 100}%`;
+
+                pieceElement.addEventListener("click", () => handlePieceClick(piece));
                 grid.appendChild(pieceElement);
             });
         }
 
-        function handlePieceClick(index) {
-            const pieces = document.querySelectorAll('.puzzle-piece');
-            
+        function getBackgroundPosition(pos) {
+            const x = (pos % gridSize) * (100 / (gridSize - 1));
+            const y = Math.floor(pos / gridSize) * (100 / (gridSize - 1));
+            return `${x}% ${y}%`;
+        }
+
+        function handlePieceClick(clickedPiece) {
             if (selectedPiece === null) {
-                selectedPiece = index;
-                pieces[index].classList.add('selected');
-            } else {
-                // Swap pieces
-                const temp = pieces[selectedPiece].style.backgroundPosition;
-                pieces[selectedPiece].style.backgroundPosition = pieces[index].style.backgroundPosition;
-                pieces[index].style.backgroundPosition = temp;
-
-                const tempPiece = pieces[selectedPiece];
-                pieces[selectedPiece].classList.remove('selected');
-                
-                // Update pieces array
-                const tempData = pieces[selectedPiece];
-                pieces[selectedPiece] = pieces[index];
-                pieces[index] = tempData;
-
+                selectedPiece = clickedPiece;
+                document.querySelectorAll(".puzzle-piece")[clickedPiece.currentPos].classList.add("selected");
+            } else if (selectedPiece !== clickedPiece) {
+                swapPieces(selectedPiece, clickedPiece);
+                document.querySelectorAll(".puzzle-piece")[selectedPiece.currentPos].classList.remove("selected");
                 selectedPiece = null;
-                
-                // Check if puzzle is complete
                 checkCompletion();
             }
         }
 
-        function checkCompletion() {
-            const isComplete = pieces.every((piece, index) => {
-                const currentPos = piece.backgroundPos;
-                const correctPos = {
-                    x: -(index % GRID_SIZE) * PIECE_SIZE,
-                    y: -Math.floor(index / GRID_SIZE) * PIECE_SIZE
-                };
-                return currentPos.x === correctPos.x && currentPos.y === correctPos.y;
-            });
+        function swapPieces(pieceA, pieceB) {
+            const tempPos = pieceA.currentPos;
+            pieceA.currentPos = pieceB.currentPos;
+            pieceB.currentPos = tempPos;
 
+            renderPuzzle();
+        }
+
+        function checkCompletion() {
+            const isComplete = pieces.every((piece) => piece.currentPos === piece.correctPos);
             if (isComplete) {
-                document.getElementById('completeMessage').style.display = 'block';
+                document.getElementById("completeMessage").style.display = "block";
             }
         }
 
@@ -223,7 +230,25 @@
             initializePuzzle();
         }
 
-        // Initialize the puzzle when the page loads
+        function changeGridSize() {
+            gridSize = prompt("Enter new grid size (e.g., 3 for 3x3, 4 for 4x4):", gridSize) || gridSize;
+            gridSize = Math.max(2, Math.min(10, parseInt(gridSize, 10)));
+            initializePuzzle();
+        }
+
+        function uploadImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    puzzleImages.push(reader.result);
+                    currentImage = puzzleImages.length - 1;
+                    initializePuzzle();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
         window.onload = initializePuzzle;
     </script>
 </body>
