@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Jigsaw Puzzle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f9f9f9;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .button {
+            padding: 0.75rem 1rem;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-label {
+            padding: 0.75rem 1rem;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .upload-label:hover {
+            background-color: #218838;
+        }
+
+        .puzzle-container {
+            width: 100%;
+            aspect-ratio: 1; /* Ensures the puzzle remains square */
+            position: relative;
+            overflow: hidden;
+            background-color: #ddd;
+            border-radius: 0.5rem;
+        }
+
+        .puzzle-grid {
+            display: grid;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            gap: 2px;
+        }
+
+        .puzzle-piece {
+            position: relative;
+            background-size: 100%;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .puzzle-piece:hover {
+            transform: scale(1.05);
+        }
+
+        .complete-message {
+            color: #28a745;
+            font-weight: bold;
+            text-align: center;
+            padding: 1rem;
+            background-color: #d4edda;
+            border-radius: 0.375rem;
+            width: 100%;
+            display: none;
+        }
+
+        @media (max-width: 480px) {
+            .button, .upload-label {
+                font-size: 0.875rem;
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <button class="button" onclick="initializePuzzle()">New Puzzle</button>
+            <button class="button" onclick="switchImage()">Change Image</button>
+            <button class="button" onclick="changeGridSize()">Change Grid Size</button>
+            <label for="fileInput" class="upload-label">Upload Image</label>
+            <input type="file" id="fileInput" class="file-input" accept="image/*" onchange="uploadImage(event)">
+        </div>
+
+        <div class="puzzle-container">
+            <div class="puzzle-grid" id="puzzleGrid"></div>
+        </div>
+
+        <div class="complete-message" id="completeMessage">
+            Congratulations! Puzzle Complete! 🎉
+        </div>
+    </div>
+
+    <script>
+        let gridSize = 4;
+        let pieces = [];
+        let selectedPiece = null;
+        let currentImage = 0;
+
+        const puzzleImages = [
+            "https://www.maximumraw.com/games/noahsark.jpeg",
+            "https://www.maximumraw.com/games/dubai.jpeg"
+        ];
+        let uploadedImage = null;
+
+        function createPieces() {
+            pieces = [];
+            const totalPieces = gridSize * gridSize;
+            for (let i = 0; i < totalPieces; i++) {
+                pieces.push({
+                    id: i,
+                    currentPos: i,
+                    correctPos: i,
+                });
+            }
+            return pieces;
+        }
+
+        function shufflePieces() {
+            return [...pieces].sort(() => Math.random() - 0.5);
+        }
+
+        function initializePuzzle() {
+            pieces = createPieces();
+            pieces = shufflePieces();
+            pieces.forEach((piece, index) => (piece.currentPos = index));
+            renderPuzzle();
+            document.getElementById("completeMessage").style.display = "none";
+        }
+
+        function renderPuzzle() {
+            const grid = document.getElementById("puzzleGrid");
+            grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+            grid.innerHTML = "";
+
+            pieces.forEach((piece) => {
+                const pieceElement = document.createElement("div");
+                pieceElement.className = "puzzle-piece";
+                pieceElement.style.order = piece.currentPos;
+
+                const imageUrl = uploadedImage || puzzleImages[currentImage];
+                pieceElement.style.backgroundImage = `url(${imageUrl})`;
+
+                // Adjust background size and position
+                const sizePercentage = 100 * gridSize;
+                const x = (piece.correctPos % gridSize) * (100 / (gridSize - 1));
+                const y = Math.floor(piece.correctPos / gridSize) * (100 / (gridSize - 1));
+
+                pieceElement.style.backgroundSize = `${sizePercentage}% ${sizePercentage}%`;
+                pieceElement.style.backgroundPosition = `${x}% ${y}%`;
+                pieceElement.style.aspectRatio = "1"; // Keep pieces square
+
+                pieceElement.addEventListener("click", () => handlePieceClick(piece));
+                grid.appendChild(pieceElement);
+            });
+        }
+
+        function handlePieceClick(clickedPiece) {
+            if (selectedPiece === null) {
+                selectedPiece = clickedPiece;
+            } else if (selectedPiece !== clickedPiece) {
+                swapPieces(selectedPiece, clickedPiece);
+                selectedPiece = null;
+                checkCompletion();
+            }
+        }
+
+        function swapPieces(pieceA, pieceB) {
+            const tempPos = pieceA.currentPos;
+            pieceA.currentPos = pieceB.currentPos;
+            pieceB.currentPos = tempPos;
+            renderPuzzle();
+        }
+
+        function checkCompletion() {
+            const isComplete = pieces.every((piece) => piece.currentPos === piece.correctPos);
+            if (isComplete) {
+                document.getElementById("completeMessage").style.display = "block";
+            }
+        }
+
+        function switchImage() {
+            currentImage = (currentImage + 1) % puzzleImages.length;
+            uploadedImage = null;
+            initializePuzzle();
+        }
+
+        function changeGridSize() {
+            const newSize = prompt("Enter new grid size (2-10):", gridSize);
+            gridSize = Math.max(2, Math.min(10, parseInt(newSize, 10)));
+            initializePuzzle();
+        }
+
+        function uploadImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    uploadedImage = e.target.result;
+                    initializePuzzle();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        window.onload = initializePuzzle;
+    </script>
+</body>
+</html>
