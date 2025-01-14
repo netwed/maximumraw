@@ -124,8 +124,43 @@
             width: 100%;
         }
 
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .difficulty-selector {
+            background-color: #fff;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .difficulty-button {
+            padding: 0.75rem 1rem;
+            margin: 0.5rem;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.2s;
+        }
+
+        .difficulty-button:hover {
+            background-color: #0056b3;
+        }
+
         @media (max-width: 480px) {
-            .button, .upload-label {
+            .button, .upload-label, .difficulty-button {
                 font-size: 0.875rem;
                 padding: 0.5rem;
             }
@@ -138,10 +173,7 @@
         <div class="controls">
             <button class="button" onclick="initializePuzzle()">New Puzzle</button>
             <button class="button" onclick="switchImage()">Change Image</button>
-            <button class="button" onclick="setGridSize(2)">Easy (2x2)</button>
-            <button class="button" onclick="setGridSize(3)">Medium (3x3)</button>
-            <button class="button" onclick="setGridSize(4)">Hard (4x4)</button>
-            <button class="button" onclick="setGridSize(5)">Expert (5x5)</button>
+            <button class="button" onclick="showDifficultySelector()">Select Difficulty</button>
             <label for="fileInput" class="upload-label">Upload Image</label>
             <input type="file" id="fileInput" class="file-input" accept="image/*" onchange="uploadImage(event)">
         </div>
@@ -152,6 +184,16 @@
 
         <div class="complete-message" id="completeMessage">
             Congratulations! Puzzle Complete! 🎉
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="difficulty-selector" id="difficultySelector">
+            <button class="difficulty-button" onclick="setGridSize(2)">Easy (2x2)</button>
+            <button class="difficulty-button" onclick="setGridSize(3)">Medium (3x3)</button>
+            <button class="difficulty-button" onclick="setGridSize(4)">Hard (4x4)</button>
+            <button class="difficulty-button" onclick="setGridSize(5)">Expert (5x5)</button>
+            <button class="difficulty-button" onclick="hideDifficultySelector()">Cancel</button>
         </div>
     </div>
 
@@ -254,6 +296,7 @@
         function setGridSize(size) {
             gridSize = size;
             initializePuzzle();
+            hideDifficultySelector();
         }
 
         function uploadImage(event) {
@@ -266,6 +309,14 @@
                 };
                 reader.readAsDataURL(file);
             }
+        }
+
+        function showDifficultySelector() {
+            document.getElementById("modalOverlay").style.display = "flex";
+        }
+
+        function hideDifficultySelector() {
+            document.getElementById("modalOverlay").style.display = "none";
         }
 
         window.onload = initializePuzzle;
