@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Responsive Jigsaw Puzzle</title>
+    <title>MaximumRaw Jigsaw Puzzle</title>
     <style>
         * {
             margin: 0;
@@ -14,11 +14,19 @@
         body {
             font-family: Arial, sans-serif;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             background-color: #f9f9f9;
             padding: 0;
+        }
+
+        header {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #333;
         }
 
         .container {
@@ -43,8 +51,7 @@
             border-radius: 0.375rem;
             font-size: 1rem;
             cursor: pointer;
-            transition: background-color 0.3s, transform 0.2s;
-            text-align: center;
+            transition: background-color 0.3s, box-shadow 0.2s;
         }
 
         .button {
@@ -55,7 +62,6 @@
 
         .button:hover {
             background-color: #0056b3;
-            transform: scale(1.05);
         }
 
         .upload-label {
@@ -66,20 +72,10 @@
 
         .upload-label:hover {
             background-color: #218838;
-            transform: scale(1.05);
         }
 
         .file-input {
             display: none;
-        }
-
-        .status {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            font-size: 1.25rem;
-            font-weight: bold;
-            color: #333;
         }
 
         .puzzle-container {
@@ -89,7 +85,6 @@
             overflow: hidden;
             background-color: #ddd;
             border-radius: 0.5rem;
-            touch-action: manipulation;
         }
 
         .puzzle-grid {
@@ -105,11 +100,17 @@
         .puzzle-piece {
             background-size: 100%;
             cursor: pointer;
-            transition: transform 0.1s;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        .puzzle-piece:active {
-            transform: scale(0.95);
+        .puzzle-piece:hover {
+            transform: scale(1.05);
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .puzzle-piece.clicked {
+            transform: scale(1.1);
+            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.4);
         }
 
         .complete-message {
@@ -128,26 +129,21 @@
                 font-size: 0.875rem;
                 padding: 0.5rem;
             }
-
-            .status {
-                font-size: 1rem;
-            }
         }
     </style>
 </head>
 <body>
+    <header>MaximumRaw Jigsaw Puzzle</header>
     <div class="container">
         <div class="controls">
             <button class="button" onclick="initializePuzzle()">New Puzzle</button>
             <button class="button" onclick="switchImage()">Change Image</button>
-            <button class="button" onclick="changeGridSize()">Change Grid Size</button>
+            <button class="button" onclick="setGridSize(2)">Easy (2x2)</button>
+            <button class="button" onclick="setGridSize(3)">Medium (3x3)</button>
+            <button class="button" onclick="setGridSize(4)">Hard (4x4)</button>
+            <button class="button" onclick="setGridSize(5)">Expert (5x5)</button>
             <label for="fileInput" class="upload-label">Upload Image</label>
             <input type="file" id="fileInput" class="file-input" accept="image/*" onchange="uploadImage(event)">
-        </div>
-
-        <div class="status">
-            <div id="timer">Time: 0s</div>
-            <div id="moveCounter">Moves: 0</div>
         </div>
 
         <div class="puzzle-container">
@@ -164,10 +160,6 @@
         let pieces = [];
         let selectedPiece = null;
         let currentImageIndex = 0;
-        let timerInterval;
-        let seconds = 0;
-        let moveCount = 0;
-        let puzzleStarted = false;
 
         const puzzleImages = [
             "https://www.maximumraw.com/games/noahsark.jpeg",
@@ -192,23 +184,12 @@
             return [...pieces].sort(() => Math.random() - 0.5);
         }
 
-        function startTimer() {
-            if (!puzzleStarted) {
-                puzzleStarted = true;
-                timerInterval = setInterval(() => {
-                    seconds++;
-                    document.getElementById("timer").textContent = `Time: ${seconds}s`;
-                }, 1000);
-            }
-        }
-
         function initializePuzzle() {
             pieces = createPieces();
             pieces = shufflePieces();
             pieces.forEach((piece, index) => (piece.currentPos = index));
             renderPuzzle();
             document.getElementById("completeMessage").style.display = "none";
-            resetTimerAndMoves();
         }
 
         function renderPuzzle() {
@@ -232,22 +213,20 @@
                 pieceElement.style.backgroundPosition = `${x}% ${y}%`;
                 pieceElement.style.aspectRatio = "1";
 
-                pieceElement.addEventListener("click", () => {
-                    startTimer();
-                    handlePieceClick(piece);
-                });
-
+                pieceElement.addEventListener("click", () => handlePieceClick(piece, pieceElement));
                 grid.appendChild(pieceElement);
             });
         }
 
-        function handlePieceClick(clickedPiece) {
+        function handlePieceClick(clickedPiece, element) {
             if (selectedPiece === null) {
                 selectedPiece = clickedPiece;
+                element.classList.add("clicked");
             } else if (selectedPiece !== clickedPiece) {
+                const selectedElement = document.querySelector(".puzzle-piece.clicked");
                 swapPieces(selectedPiece, clickedPiece);
                 selectedPiece = null;
-                incrementMoveCounter();
+                if (selectedElement) selectedElement.classList.remove("clicked");
                 checkCompletion();
             }
         }
@@ -262,7 +241,6 @@
         function checkCompletion() {
             const isComplete = pieces.every((piece) => piece.currentPos === piece.correctPos);
             if (isComplete) {
-                clearInterval(timerInterval);
                 document.getElementById("completeMessage").style.display = "block";
             }
         }
@@ -273,9 +251,8 @@
             initializePuzzle();
         }
 
-        function changeGridSize() {
-            const newSize = prompt("Enter new grid size (2-10):", gridSize);
-            gridSize = Math.max(2, Math.min(10, parseInt(newSize, 10)));
+        function setGridSize(size) {
+            gridSize = size;
             initializePuzzle();
         }
 
@@ -289,20 +266,6 @@
                 };
                 reader.readAsDataURL(file);
             }
-        }
-
-        function resetTimerAndMoves() {
-            clearInterval(timerInterval);
-            seconds = 0;
-            moveCount = 0;
-            puzzleStarted = false;
-            document.getElementById("timer").textContent = "Time: 0s";
-            document.getElementById("moveCounter").textContent = "Moves: 0";
-        }
-
-        function incrementMoveCounter() {
-            moveCount++;
-            document.getElementById("moveCounter").textContent = `Moves: ${moveCount}`;
         }
 
         window.onload = initializePuzzle;
