@@ -93,7 +93,7 @@
 
         .puzzle-piece {
             position: relative;
-            background-size: 100%;
+            background-size: cover; /* Maintain the image's original aspect ratio */
             cursor: pointer;
             transition: transform 0.2s;
         }
@@ -188,20 +188,16 @@
                 pieceElement.style.order = piece.currentPos;
 
                 const imageUrl = uploadedImage || puzzleImages[currentImage];
+                const row = Math.floor(piece.correctPos / gridSize);
+                const col = piece.correctPos % gridSize;
                 pieceElement.style.backgroundImage = `url(${imageUrl})`;
-                pieceElement.style.backgroundPosition = getBackgroundPosition(piece.correctPos);
+                pieceElement.style.backgroundPosition = `${(col * 100) / (gridSize - 1)}% ${(row * 100) / (gridSize - 1)}%`;
                 pieceElement.style.aspectRatio = "1"; // Keep pieces square
                 pieceElement.style.backgroundSize = `${gridSize * 100}%`;
 
                 pieceElement.addEventListener("click", () => handlePieceClick(piece));
                 grid.appendChild(pieceElement);
             });
-        }
-
-        function getBackgroundPosition(pos) {
-            const x = (pos % gridSize) * (100 / (gridSize - 1));
-            const y = Math.floor(pos / gridSize) * (100 / (gridSize - 1));
-            return `${x}% ${y}%`;
         }
 
         function handlePieceClick(clickedPiece) {
