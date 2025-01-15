@@ -504,9 +504,10 @@ function timeToSeconds(timeString) {
         }
 
         function switchImage() {
-            currentImageIndex = (currentImageIndex + 1) % puzzleImages.length;
-            initializePuzzle();
-        }
+    uploadedImage = null;  // Reset the uploaded image
+    currentImageIndex = (currentImageIndex + 1) % puzzleImages.length;
+    initializePuzzle();
+}
 
         function uploadImage(event) {
             const file = event.target.files[0];
