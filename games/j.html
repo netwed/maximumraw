@@ -445,7 +445,6 @@
         if (timer) clearInterval(timer);
         document.getElementById("completeMessage").style.display = "block";
         
-        // Save high score
         const difficulty = `${gridSize}x${gridSize}`;
         const currentTime = document.getElementById("timeElapsed").textContent;
         const currentScore = {
@@ -455,22 +454,18 @@
         
         const highScores = JSON.parse(localStorage.getItem('highScores')) || {};
         
-        // Convert time strings to seconds for comparison
         const currentSeconds = timeToSeconds(currentTime);
         const highScoreSeconds = highScores[difficulty] ? timeToSeconds(highScores[difficulty].time) : Infinity;
         
-        // Check if this is a new high score (fewer moves or same moves but faster time)
         if (!highScores[difficulty] || 
             currentScore.moves < highScores[difficulty].moves || 
             (currentScore.moves === highScores[difficulty].moves && currentSeconds < highScoreSeconds)) {
-            // Update the high score
             highScores[difficulty] = currentScore;
             localStorage.setItem('highScores', JSON.stringify(highScores));
-            alert(`Puzzle Complete!\n\nNEW HIGH SCORE!\nMoves: ${moveCount}\nTime: ${currentTime}`);
+            alert(`🎉 🎊 🌟 Puzzle Complete! 🏆 \n\nNEW HIGH SCORE! 🥇\nMoves: ${moveCount}\nTime: ${currentTime}`);
         } else {
-            // Not a new high score, show current and previous best
             const previousBest = highScores[difficulty];
-            alert(`Puzzle Complete!\n\nCurrent Score:\nMoves: ${moveCount}\nTime: ${currentTime}\n\nHigh Score:\nMoves: ${previousBest.moves}\nTime: ${previousBest.time}`);
+            alert(`🎉 🎮 ⭐ Puzzle Complete! \n\nCurrent Score:\nMoves: ${moveCount}\nTime: ${currentTime}\n\nHigh Score:\nMoves: ${previousBest.moves}\nTime: ${previousBest.time}`);
         }
     }
 }
