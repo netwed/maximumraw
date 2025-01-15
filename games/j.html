@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MaximumRaw Jigsaw Puzzle</title>
     <style>
+        :root {
+            --primary-color: #007BFF;
+            --primary-hover: #0056b3;
+            --success-color: #28a745;
+            --success-hover: #218838;
+            --background-color: #f9f9f9;
+            --text-color: #333;
+            --border-radius: 0.375rem;
+            --transition-speed: 0.3s;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,66 +23,73 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
+            font-family: system-ui, -apple-system, sans-serif;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #f9f9f9;
-            padding: 0;
+            background-color: var(--background-color);
+            padding: 1rem;
+            color: var(--text-color);
         }
 
         header {
-            font-size: 1.5rem;
+            font-size: 1.75rem;
             font-weight: bold;
-            margin-bottom: 1rem;
-            color: #333;
+            margin-bottom: 1.5rem;
+            text-align: center;
         }
 
         .container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 1rem;
+            gap: 1.5rem;
             width: 100%;
-            max-width: 600px;
+            max-width: 800px;
         }
 
         .controls {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.5rem;
+            gap: 0.75rem;
             justify-content: center;
             width: 100%;
         }
 
         .button, .upload-label {
-            padding: 0.75rem 1rem;
-            border-radius: 0.375rem;
+            padding: 0.75rem 1.25rem;
+            border-radius: var(--border-radius);
             font-size: 1rem;
             cursor: pointer;
-            transition: background-color 0.3s, box-shadow 0.2s;
+            transition: all var(--transition-speed);
+            border: none;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .button {
-            background-color: #007BFF;
-            color: #fff;
-            border: none;
+            background-color: var(--primary-color);
+            color: white;
         }
 
         .button:hover {
-            background-color: #0056b3;
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         .upload-label {
-            background-color: #28a745;
-            color: #fff;
-            border: none;
+            background-color: var(--success-color);
+            color: white;
         }
 
         .upload-label:hover {
-            background-color: #218838;
+            background-color: var(--success-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         .file-input {
@@ -83,8 +101,9 @@
             aspect-ratio: 1;
             position: relative;
             overflow: hidden;
-            background-color: #ddd;
-            border-radius: 0.5rem;
+            background-color: #eee;
+            border-radius: var(--border-radius);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
         }
 
         .puzzle-grid {
@@ -95,33 +114,50 @@
             width: 100%;
             height: 100%;
             gap: 2px;
+            background-color: #333;
         }
 
         .puzzle-piece {
             background-size: 100%;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all var(--transition-speed);
+            position: relative;
+            overflow: hidden;
+            border-radius: 2px;
         }
 
-        .puzzle-piece:hover {
-            transform: scale(1.05);
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+        .puzzle-piece::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transition: opacity var(--transition-speed);
+        }
+
+        .puzzle-piece:hover::before {
+            opacity: 1;
         }
 
         .puzzle-piece.clicked {
-            transform: scale(1.1);
-            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.4);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 123, 255, 0.5);
+            z-index: 1;
         }
 
         .complete-message {
             display: none;
-            color: #28a745;
+            color: var(--success-color);
             font-weight: bold;
             text-align: center;
-            padding: 1rem;
+            padding: 1.5rem;
             background-color: #d4edda;
-            border-radius: 0.375rem;
+            border-radius: var(--border-radius);
             width: 100%;
+            animation: slideIn 0.5s ease-out;
         }
 
         .modal-overlay {
@@ -130,39 +166,88 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.6);
             display: none;
             justify-content: center;
             align-items: center;
+            opacity: 0;
+            transition: opacity var(--transition-speed);
+            backdrop-filter: blur(3px);
         }
 
         .difficulty-selector {
-            background-color: #fff;
-            padding: 1rem;
-            border-radius: 0.375rem;
-            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+            background-color: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.2);
             text-align: center;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all var(--transition-speed);
+            max-width: 90%;
+        }
+
+        .difficulty-selector h2 {
+            margin-bottom: 1.5rem;
+            color: var(--text-color);
+        }
+
+        .difficulty-selector.show {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .difficulty-button {
-            padding: 0.75rem 1rem;
+            padding: 0.75rem 1.25rem;
             margin: 0.5rem;
-            background-color: #007BFF;
-            color: #fff;
+            background-color: var(--primary-color);
+            color: white;
             border: none;
-            border-radius: 0.375rem;
+            border-radius: var(--border-radius);
             cursor: pointer;
-            transition: background-color 0.3s, box-shadow 0.2s;
+            transition: all var(--transition-speed);
+            min-width: 120px;
         }
 
         .difficulty-button:hover {
-            background-color: #0056b3;
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .stats {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         @media (max-width: 480px) {
             .button, .upload-label, .difficulty-button {
                 font-size: 0.875rem;
-                padding: 0.5rem;
+                padding: 0.625rem 1rem;
+                width: 100%;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: center;
             }
         }
     </style>
@@ -185,14 +270,21 @@
         <div class="complete-message" id="completeMessage">
             Congratulations! Puzzle Complete! 🎉
         </div>
+
+        <div class="stats">
+            <span>Moves: <strong id="moveCount">0</strong></span>
+            <span>Time: <strong id="timeElapsed">00:00</strong></span>
+        </div>
     </div>
 
     <div class="modal-overlay" id="modalOverlay">
         <div class="difficulty-selector" id="difficultySelector">
+            <h2>Select Difficulty</h2>
             <button class="difficulty-button" onclick="setGridSize(2)">Easy (2x2)</button>
             <button class="difficulty-button" onclick="setGridSize(3)">Medium (3x3)</button>
             <button class="difficulty-button" onclick="setGridSize(4)">Hard (4x4)</button>
             <button class="difficulty-button" onclick="setGridSize(5)">Expert (5x5)</button>
+            <button class="difficulty-button" onclick="setGridSize(6)">Master (6x6)</button>
             <button class="difficulty-button" onclick="hideDifficultySelector()">Cancel</button>
         </div>
     </div>
@@ -202,12 +294,21 @@
         let pieces = [];
         let selectedPiece = null;
         let currentImageIndex = 0;
+        let moveCount = 0;
+        let timer = null;
+        let startTime = null;
+        let isGameActive = false;
 
         const puzzleImages = [
             "https://www.maximumraw.com/games/noahsark.jpeg",
             "https://www.maximumraw.com/games/dubai.jpeg"
         ];
         let uploadedImage = null;
+
+        // Initialize puzzle on page load
+        window.onload = function() {
+            initializePuzzle();
+        };
 
         function createPieces() {
             pieces = [];
@@ -223,15 +324,65 @@
         }
 
         function shufflePieces() {
-            return [...pieces].sort(() => Math.random() - 0.5);
+            let shuffled = [...pieces];
+            // Fisher-Yates shuffle algorithm
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            // Ensure the puzzle is solvable
+            if (!isSolvable(shuffled)) {
+                // Swap last two pieces if puzzle is not solvable
+                [shuffled[shuffled.length - 1], shuffled[shuffled.length - 2]] = 
+                [shuffled[shuffled.length - 2], shuffled[shuffled.length - 1]];
+            }
+            return shuffled;
+        }
+
+        function isSolvable(puzzle) {
+            let inversions = 0;
+            for (let i = 0; i < puzzle.length - 1; i++) {
+                for (let j = i + 1; j < puzzle.length; j++) {
+                    if (puzzle[i].correctPos > puzzle[j].correctPos) {
+                        inversions++;
+                    }
+                }
+            }
+            return inversions % 2 === 0;
         }
 
         function initializePuzzle() {
+            resetStats();
             pieces = createPieces();
             pieces = shufflePieces();
             pieces.forEach((piece, index) => (piece.currentPos = index));
             renderPuzzle();
             document.getElementById("completeMessage").style.display = "none";
+            //startGame();
+        }
+
+        function startGame() {
+            isGameActive = true;
+            startTime = Date.now();
+            if (timer) clearInterval(timer);
+            timer = setInterval(updateTimer, 1000);
+        }
+
+        function updateTimer() {
+            if (!startTime || !isGameActive) return;
+            
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const seconds = (elapsed % 60).toString().padStart(2, '0');
+            document.getElementById("timeElapsed").textContent = `${minutes}:${seconds}`;
+        }
+
+        function resetStats() {
+            moveCount = 0;
+            document.getElementById("moveCount").textContent = "0";
+            document.getElementById("timeElapsed").textContent = "00:00";
+            if (timer) clearInterval(timer);
+            isGameActive = false;
         }
 
         function renderPuzzle() {
@@ -253,7 +404,6 @@
 
                 pieceElement.style.backgroundSize = `${sizePercentage}% ${sizePercentage}%`;
                 pieceElement.style.backgroundPosition = `${x}% ${y}%`;
-                pieceElement.style.aspectRatio = "1";
 
                 pieceElement.addEventListener("click", () => handlePieceClick(piece, pieceElement));
                 grid.appendChild(pieceElement);
@@ -261,17 +411,25 @@
         }
 
         function handlePieceClick(clickedPiece, element) {
-            if (selectedPiece === null) {
-                selectedPiece = clickedPiece;
-                element.classList.add("clicked");
-            } else if (selectedPiece !== clickedPiece) {
-                const selectedElement = document.querySelector(".puzzle-piece.clicked");
-                swapPieces(selectedPiece, clickedPiece);
-                selectedPiece = null;
-                if (selectedElement) selectedElement.classList.remove("clicked");
-                checkCompletion();
-            }
+    if (!isGameActive) {
+        startGame(); // Add this line to start the game on first click
+    }
+
+    if (selectedPiece === null) {
+        selectedPiece = clickedPiece;
+        element.classList.add("clicked");
+    } else {
+        const selectedElement = document.querySelector(".puzzle-piece.clicked");
+        if (selectedPiece !== clickedPiece) {
+            swapPieces(selectedPiece, clickedPiece);
+            moveCount++;
+            document.getElementById("moveCount").textContent = moveCount;
+            checkCompletion();
         }
+        selectedPiece = null;
+        if (selectedElement) selectedElement.classList.remove("clicked");
+    }
+}
 
         function swapPieces(pieceA, pieceB) {
             const tempPos = pieceA.currentPos;
@@ -281,16 +439,62 @@
         }
 
         function checkCompletion() {
-            const isComplete = pieces.every((piece) => piece.currentPos === piece.correctPos);
-            if (isComplete) {
-                document.getElementById("completeMessage").style.display = "block";
-            }
+    const isComplete = pieces.every((piece) => piece.currentPos === piece.correctPos);
+    if (isComplete) {
+        isGameActive = false;
+        if (timer) clearInterval(timer);
+        document.getElementById("completeMessage").style.display = "block";
+        
+        // Save high score
+        const difficulty = `${gridSize}x${gridSize}`;
+        const currentTime = document.getElementById("timeElapsed").textContent;
+        const currentScore = {
+            moves: moveCount,
+            time: currentTime
+        };
+        
+        const highScores = JSON.parse(localStorage.getItem('highScores')) || {};
+        
+        // Convert time strings to seconds for comparison
+        const currentSeconds = timeToSeconds(currentTime);
+        const highScoreSeconds = highScores[difficulty] ? timeToSeconds(highScores[difficulty].time) : Infinity;
+        
+        // Check if this is a new high score (fewer moves or same moves but faster time)
+        if (!highScores[difficulty] || 
+            currentScore.moves < highScores[difficulty].moves || 
+            (currentScore.moves === highScores[difficulty].moves && currentSeconds < highScoreSeconds)) {
+            // Update the high score
+            highScores[difficulty] = currentScore;
+            localStorage.setItem('highScores', JSON.stringify(highScores));
+            alert(`Puzzle Complete!\n\nNEW HIGH SCORE!\nMoves: ${moveCount}\nTime: ${currentTime}`);
+        } else {
+            // Not a new high score, show current and previous best
+            const previousBest = highScores[difficulty];
+            alert(`Puzzle Complete!\n\nCurrent Score:\nMoves: ${moveCount}\nTime: ${currentTime}\n\nHigh Score:\nMoves: ${previousBest.moves}\nTime: ${previousBest.time}`);
+        }
+    }
+}
+
+// Helper function to convert time string (MM:SS) to seconds
+function timeToSeconds(timeString) {
+    const [minutes, seconds] = timeString.split(':').map(Number);
+    return minutes * 60 + seconds;
+}
+
+        function showDifficultySelector() {
+            document.getElementById("modalOverlay").style.display = "flex";
+            setTimeout(() => {
+                document.getElementById("difficultySelector").classList.add("show");
+                document.getElementById("modalOverlay").style.opacity = 1;
+            }, 100);
         }
 
-        function switchImage() {
-            currentImageIndex = (currentImageIndex + 1) % puzzleImages.length;
-            uploadedImage = null;
-            initializePuzzle();
+        function hideDifficultySelector() {
+            document.getElementById("difficultySelector").classList.remove("show");
+            document.getElementById("modalOverlay").style.opacity = 0;
+            setTimeout(() => {
+                document.getElementById("modalOverlay").style.display = "none";
+            }, 300);
         }
 
         function setGridSize(size) {
@@ -299,27 +503,24 @@
             hideDifficultySelector();
         }
 
+        function switchImage() {
+            currentImageIndex = (currentImageIndex + 1) % puzzleImages.length;
+            initializePuzzle();
+        }
+
         function uploadImage(event) {
             const file = event.target.files[0];
-            if (file) {
+            if (file && file.type.startsWith('image/')) {
                 const reader = new FileReader();
-                reader.onload = (e) => {
+                reader.onload = function(e) {
                     uploadedImage = e.target.result;
                     initializePuzzle();
                 };
                 reader.readAsDataURL(file);
+            } else {
+                alert("Please upload a valid image.");
             }
         }
-
-        function showDifficultySelector() {
-            document.getElementById("modalOverlay").style.display = "flex";
-        }
-
-        function hideDifficultySelector() {
-            document.getElementById("modalOverlay").style.display = "none";
-        }
-
-        window.onload = initializePuzzle;
     </script>
 </body>
 </html>
