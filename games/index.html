@@ -294,7 +294,11 @@
 
     <!-- Footer -->
     <footer>
-        <p>&copy; 2019-2025 MaximumRaw GameHub. All rights reserved.</p>
+        <p>&copy; <script>
+            const startYear = 2019;
+            const currentYear = new Date().getFullYear();
+            document.write(`${startYear}-${currentYear} MaximumRaw GameHub. All rights reserved.`);
+        </script></p>
     </footer>
 
     <!-- Automatic User Data Collection -->
