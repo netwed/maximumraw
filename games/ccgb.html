@@ -1,6 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canadian Checkers vs Computer</title>
   <style>
     * {
       margin: 0;
@@ -24,8 +27,8 @@
       flex-direction: column;
       align-items: center;
       gap: 1rem;
-      max-width: 1200px;
       width: 100%;
+      max-width: 1200px;
     }
 
     .game-title {
@@ -62,7 +65,7 @@
       display: grid;
       grid-template-columns: repeat(12, 1fr);
       aspect-ratio: 1;
-      max-width: 90vh;
+      max-width: 90vw;
       width: 100%;
       background: #fff;
       border: 4px solid #654321;
@@ -168,21 +171,31 @@
       100% { transform: scale(0); opacity: 0; }
     }
 
-    .win-message {
+    .win-message, .lose-message {
       font-size: 2rem;
       color: gold;
       margin-top: 20px;
     }
 
     .lose-message {
-      font-size: 2rem;
       color: red;
-      margin-top: 20px;
     }
 
+    /* Mobile-Friendly Adjustments */
     @media (max-width: 600px) {
       .board {
         max-width: 100%;
+      }
+
+      .score-board {
+        flex-direction: column;
+        max-width: 100%;
+        gap: 1rem;
+      }
+
+      button {
+        width: 100%;
+        max-width: 200px;
       }
     }
   </style>
@@ -222,6 +235,7 @@
     let playerScore = 0;
     let computerScore = 0;
 
+    // Initialize the board
     function initializeBoard() {
       board = [];
       for (let row = 0; row < BOARD_SIZE; row++) {
@@ -242,11 +256,13 @@
       }
     }
 
+    // Update scores display
     function updateScores() {
       document.getElementById('playerScore').textContent = playerScore;
       document.getElementById('computerScore').textContent = computerScore;
     }
 
+    // Create the board UI
     function createBoard() {
       const boardElement = document.getElementById('board');
       boardElement.innerHTML = '';
@@ -272,6 +288,7 @@
       updateTurnIndicator();
     }
 
+    // Handle click on a square
     function handleSquareClick(row, col) {
       if (isComputerTurn) return;
       
@@ -297,25 +314,107 @@
 
           // Start computer's turn after a delay
           isComputerTurn = true;
-          setTimeout(computerMove, 1000);
+          setTimeout(computerMove, 500);
+          updateTurnIndicator();
+        } else {
+          clearSelection();
+          if (piece && piece.color === 'white') {
+            selectPiece(row, col);
+          }
         }
       } else if (piece && piece.color === 'white') {
         selectPiece(row, col);
       }
     }
 
-    function checkForWin() {
-      for (let row = 0; row < BOARD_SIZE; row++) {
-        for (let col = 0; col < BOARD_SIZE; col++) {
-          if (board[row][col] && board[row][col].color === 'black') {
-            return false;
-          }
-        }
-      }
-      return true;
+    // Select a piece
+    function selectPiece(row, col) {
+      selectedPiece = { row, col };
+      validMoves = getValidMoves(row, col);
+      
+      const square = document.querySelector(`[data-row="${row}"][data-col="${col}"] .piece`);
+      square.classList.add('selected');
+      
+      validMoves.forEach(move => {
+        const moveSquare = document.querySelector(`[data-row="${move.row}"][data-col="${move.col}"]`);
+        moveSquare.classList.add('valid-move');
+      });
     }
 
-    function checkForLoss() {
+    // Clear selection
+    function clearSelection() {
+      document.querySelectorAll('.piece.selected').forEach(piece => 
+        piece.classList.remove('selected'));
+      document.querySelectorAll('.valid-move').forEach(square => 
+        square.classList.remove('valid-move'));
+      selectedPiece = null;
+      validMoves = [];
+    }
+
+    // Get valid moves for a piece
+    function getValidMoves(row, col) {
+      const moves = [];
+      const piece = board[row][col];
+      const directions = piece.king ? [-1, 1] : piece.color === 'white' ? [-1] : [1];
+      
+      directions.forEach(dRow => {
+        [-1, 1].forEach(dCol => {
+          const newRow = row + dRow;
+          const newCol = col + dCol;
+          if (newRow >= 0 && newRow < BOARD_SIZE && newCol >= 0 && newCol < BOARD_SIZE) {
+            const targetSquare = board[newRow][newCol];
+            if (!targetSquare) {
+              moves.push({ row: newRow, col: newCol, capture: false });
+            } else if (targetSquare.color !== piece.color) {
+              const captureRow = newRow + dRow;
+              const captureCol = newCol + dCol;
+              if (captureRow >= 0 && captureRow < BOARD_SIZE && captureCol >= 0 && captureCol < BOARD_SIZE) {
+                const captureSquare = board[captureRow][captureCol];
+                if (!captureSquare) {
+                  moves.push({ row: captureRow, col: captureCol, capture: true });
+                }
+              }
+            }
+          }
+        });
+      });
+
+      return moves;
+    }
+
+    // Move a piece
+    function movePiece(from, toRow, toCol, capture) {
+      const piece = board[from.row][from.col];
+      board[toRow][toCol] = piece;
+      board[from.row][from.col] = null;
+
+      if (capture) {
+        const capturedRow = (from.row + toRow) / 2;
+        const capturedCol = (from.col + toCol) / 2;
+        const capturedPiece = board[capturedRow][capturedCol];
+        if (capturedPiece.color === 'white') {
+          computerScore++;
+        } else {
+          playerScore++;
+        }
+        board[capturedRow][capturedCol] = null;
+      }
+      
+      // Check for kinging
+      if (toRow === 0 && piece.color === 'white') {
+        piece.king = true;
+      }
+      if (toRow === BOARD_SIZE - 1 && piece.color === 'black') {
+        piece.king = true;
+      }
+
+      // Update the board and scores
+      updateScores();
+      createBoard();
+    }
+
+    // Check for win
+    function checkForWin() {
       for (let row = 0; row < BOARD_SIZE; row++) {
         for (let col = 0; col < BOARD_SIZE; col++) {
           if (board[row][col] && board[row][col].color === 'white') {
@@ -326,6 +425,19 @@
       return true;
     }
 
+    // Check for loss
+    function checkForLoss() {
+      for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+          if (board[row][col] && board[row][col].color === 'black') {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    // Computer's move
     function computerMove() {
       const allMoves = [];
       for (let row = 0; row < BOARD_SIZE; row++) {
@@ -358,7 +470,7 @@
 
       isComputerTurn = false;
       updateTurnIndicator();
-
+      
       // Check for winner
       if (checkForWin()) {
         document.getElementById('winMessage').textContent = 'You Win!';
@@ -370,115 +482,39 @@
       }
     }
 
-    function selectPiece(row, col) {
-      selectedPiece = { row, col };
-      validMoves = getValidMoves(row, col);
-      
-      const square = document.querySelector(`[data-row="${row}"][data-col="${col}"] .piece`);
-      square.classList.add('selected');
-      
-      validMoves.forEach(move => {
-        const moveSquare = document.querySelector(`[data-row="${move.row}"][data-col="${move.col}"]`);
-        moveSquare.classList.add('valid-move');
-      });
-    }
-
-    function clearSelection() {
-      document.querySelectorAll('.piece.selected').forEach(piece => 
-        piece.classList.remove('selected'));
-      document.querySelectorAll('.valid-move').forEach(square => 
-        square.classList.remove('valid-move'));
-      selectedPiece = null;
-      validMoves = [];
-    }
-
-    function getValidMoves(row, col) {
-      const moves = [];
-      const piece = board[row][col];
-      const directions = piece.king ? [-1, 1] : piece.color === 'white' ? [-1] : [1];
-      
-      directions.forEach(dRow => {
-        [-1, 1].forEach(dCol => {
-          let jumpRow = row + dRow * 2;
-          let jumpCol = col + dCol * 2;
-          if (isValidPosition(jumpRow, jumpCol) && !board[jumpRow][jumpCol]) {
-            const jumpedRow = row + dRow;
-            const jumpedCol = col + dCol;
-            if (board[jumpedRow][jumpedCol] && 
-                board[jumpedRow][jumpedCol].color !== piece.color) {
-              moves.push({
-                row: jumpRow,
-                col: jumpCol,
-                capture: { row: jumpedRow, col: jumpedCol }
-              });
-            }
-          }
-          
-          let newRow = row + dRow;
-          let newCol = col + dCol;
-          if (isValidPosition(newRow, newCol) && !board[newRow][newCol]) {
-            moves.push({ row: newRow, col: newCol });
-          }
-        });
-      });
-      
-      const captureMoves = moves.filter(move => move.capture);
-      return captureMoves.length > 0 ? captureMoves : moves;
-    }
-
-    function isValidPosition(row, col) {
-      return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
-    }
-
-    function movePiece(from, toRow, toCol, capture) {
-      const piece = board[from.row][from.col];
-      board[from.row][from.col] = null;
-      board[toRow][toCol] = piece;
-      
-      if (capture) {
-        const capturedPiece = board[capture.row][capture.col];
-        if (capturedPiece) {
-          const capturedElement = document.querySelector(
-            `[data-row="${capture.row}"][data-col="${capture.col}"] .piece`
-          );
-          capturedElement.classList.add('captured-piece');
-          if (piece.color === 'white') {
-            playerScore++;
-          } else {
-            computerScore++;
-          }
-          board[capture.row][capture.col] = null;
-          updateScores();
-        }
-      }
-      
-      if ((piece.color === 'white' && toRow === 0) || 
-          (piece.color === 'black' && toRow === BOARD_SIZE - 1)) {
-        piece.king = true;
-      }
-      
-      createBoard();
-    }
-
+    // Update the turn indicator
     function updateTurnIndicator() {
-      const indicator = document.getElementById('turnIndicator');
-      indicator.textContent = isComputerTurn ? "Computer's Turn" : "Your Turn";
+      const turnIndicator = document.getElementById('turnIndicator');
+      turnIndicator.textContent = isComputerTurn ? "Computer's Turn" : "Your Turn";
     }
 
+    // Reset the game
     function resetGame() {
-      isComputerTurn = false;
-      selectedPiece = null;
-      validMoves = [];
-      playerScore = 0;
-      computerScore = 0;
-      document.getElementById('winMessage').textContent = '';
-      document.getElementById('loseMessage').textContent = '';
+  // Reset scores to 0
+  playerScore = 0;
+  computerScore = 0;
+
+  // Reset the board to its initial state
+  initializeBoard();
+  createBoard();
+
+  // Update the score display
+  updateScores();
+
+  // Clear any win/lose messages
+  document.getElementById('winMessage').textContent = '';
+  document.getElementById('loseMessage').textContent = '';
+
+  // Ensure the turn indicator is correctly set for the player's turn
+  document.getElementById('turnIndicator').textContent = "Your Turn";
+}
+
+
+    // Initialize the game when the page loads
+    window.onload = function() {
       initializeBoard();
       createBoard();
-      updateScores();
-    }
-
-    resetGame();
+    };
   </script>
 </body>
 </html>
