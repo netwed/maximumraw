@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #1a1a1a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem;
+      color: white;
+    }
+
+    .game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      max-width: 1200px;
+      width: 100%;
+    }
+
+    .game-title {
+      font-size: 1.5rem;
+      text-align: center;
+    }
+
+    .score-board {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+      max-width: 400px;
+      background: #2a2a2a;
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+    }
+
+    .score {
+      text-align: center;
+    }
+
+    .score-label {
+      font-size: 0.9rem;
+      color: #888;
+    }
+
+    .score-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      aspect-ratio: 1;
+      max-width: 90vh;
+      width: 100%;
+      background: #fff;
+      border: 4px solid #654321;
+    }
+
+    .square {
+      aspect-ratio: 1;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .square.dark {
+      background: #654321;
+    }
+
+    .square.light {
+      background: #DEB887;
+    }
+
+    .piece {
+      position: absolute;
+      width: 80%;
+      height: 80%;
+      border-radius: 50%;
+      top: 10%;
+      left: 10%;
+      border: 2px solid #333;
+      transition: all 0.3s ease;
+    }
+
+    .piece.white {
+      background: #fff;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+    }
+
+    .piece.black {
+      background: #000;
+      box-shadow: inset 0 0 10px rgba(255,255,255,0.3);
+    }
+
+    .piece.king::after {
+      content: '★';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.2em;
+      color: #FFD700;
+    }
+
+    .piece.selected {
+      box-shadow: 0 0 15px #4CAF50;
+      transform: scale(1.1);
+    }
+
+    .square.valid-move::after {
+      content: '';
+      position: absolute;
+      width: 30%;
+      height: 30%;
+      border-radius: 50%;
+      background: rgba(76, 175, 80, 0.5);
+      top: 35%;
+      left: 35%;
+    }
+
+    .controls {
+      margin-top: 1rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #4CAF50;
+      color: white;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    .turn-indicator {
+      margin: 1rem 0;
+      font-size: 1.25rem;
+      color: #4CAF50;
+    }
+
+    .captured-piece {
+      animation: capture 0.5s ease-out;
+      opacity: 0;
+    }
+
+    @keyframes capture {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(0); opacity: 0; }
+    }
+
+    .win-message {
+      font-size: 2rem;
+      color: gold;
+      margin-top: 20px;
+    }
+
+    .lose-message {
+      font-size: 2rem;
+      color: red;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .board {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1 class="game-title">Canadian Checkers vs Computer</h1>
+    
+    <div class="score-board">
+      <div class="score">
+        <div class="score-label">Player (White)</div>
+        <div class="score-value" id="playerScore">0</div>
+      </div>
+      <div class="score">
+        <div class="score-label">Computer (Black)</div>
+        <div class="score-value" id="computerScore">0</div>
+      </div>
+    </div>
+
+    <div class="turn-indicator" id="turnIndicator">Your Turn</div>
+    <div class="board" id="board"></div>
+    
+    <div class="controls">
+      <button onclick="resetGame()">New Game</button>
+    </div>
+
+    <div id="winMessage" class="win-message"></div>
+    <div id="loseMessage" class="lose-message"></div>
+  </div>
+
+  <script>
+    const BOARD_SIZE = 12;
+    let board = [];
+    let selectedPiece = null;
+    let validMoves = [];
+    let isComputerTurn = false;
+    let playerScore = 0;
+    let computerScore = 0;
+
+    function initializeBoard() {
+      board = [];
+      for (let row = 0; row < BOARD_SIZE; row++) {
+        board[row] = [];
+        for (let col = 0; col < BOARD_SIZE; col++) {
+          if ((row + col) % 2 === 1) {
+            if (row < 5) {
+              board[row][col] = { color: 'black', king: false };
+            } else if (row > 6) {
+              board[row][col] = { color: 'white', king: false };
+            } else {
+              board[row][col] = null;
+            }
+          } else {
+            board[row][col] = null;
+          }
+        }
+      }
+    }
+
+    function updateScores() {
+      document.getElementById('playerScore').textContent = playerScore;
+      document.getElementById('computerScore').textContent = computerScore;
+    }
+
+    function createBoard() {
+      const boardElement = document.getElementById('board');
+      boardElement.innerHTML = '';
+      
+      for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+          const square = document.createElement('div');
+          square.className = `square ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
+          square.dataset.row = row;
+          square.dataset.col = col;
+          square.onclick = () => handleSquareClick(row, col);
+          
+          const piece = board[row][col];
+          if (piece) {
+            const pieceElement = document.createElement('div');
+            pieceElement.className = `piece ${piece.color}${piece.king ? ' king' : ''}`;
+            square.appendChild(pieceElement);
+          }
+          
+          boardElement.appendChild(square);
+        }
+      }
+      updateTurnIndicator();
+    }
+
+    function handleSquareClick(row, col) {
+      if (isComputerTurn) return;
+      
+      const piece = board[row][col];
+      
+      if (selectedPiece) {
+        const validMove = validMoves.find(move => move.row === row && move.col === col);
+        if (validMove) {
+          movePiece(selectedPiece, row, col, validMove.capture);
+          clearSelection();
+          
+          // Check for winner
+          if (checkForWin()) {
+            document.getElementById('winMessage').textContent = 'You Win!';
+            return;
+          }
+          
+          // Check for loss
+          if (checkForLoss()) {
+            document.getElementById('loseMessage').textContent = 'You Lose!';
+            return;
+          }
+
+          // Start computer's turn after a delay
+          isComputerTurn = true;
+          setTimeout(computerMove, 1000);
+        }
+      } else if (piece && piece.color === 'white') {
+        selectPiece(row, col);
+      }
+    }
+
+    function checkForWin() {
+      for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+          if (board[row][col] && board[row][col].color === 'black') {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    function checkForLoss() {
+      for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+          if (board[row][col] && board[row][col].color === 'white') {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    function computerMove() {
+      const allMoves = [];
+      for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+          if (board[row][col]?.color === 'black') {
+            const moves = getValidMoves(row, col);
+            moves.forEach(move => {
+              allMoves.push({
+                from: { row, col },
+                to: move
+              });
+            });
+          }
+        }
+      }
+
+      if (allMoves.length > 0) {
+        const captureMoves = allMoves.filter(move => move.to.capture);
+        const moveToMake = captureMoves.length > 0 
+          ? captureMoves[Math.floor(Math.random() * captureMoves.length)]
+          : allMoves[Math.floor(Math.random() * allMoves.length)];
+
+        movePiece(
+          moveToMake.from,
+          moveToMake.to.row,
+          moveToMake.to.col,
+          moveToMake.to.capture
+        );
+      }
+
+      isComputerTurn = false;
+      updateTurnIndicator();
+
+      // Check for winner
+      if (checkForWin()) {
+        document.getElementById('winMessage').textContent = 'You Win!';
+      }
+
+      // Check for loss
+      if (checkForLoss()) {
+        document.getElementById('loseMessage').textContent = 'You Lose!';
+      }
+    }
+
+    function selectPiece(row, col) {
+      selectedPiece = { row, col };
+      validMoves = getValidMoves(row, col);
+      
+      const square = document.querySelector(`[data-row="${row}"][data-col="${col}"] .piece`);
+      square.classList.add('selected');
+      
+      validMoves.forEach(move => {
+        const moveSquare = document.querySelector(`[data-row="${move.row}"][data-col="${move.col}"]`);
+        moveSquare.classList.add('valid-move');
+      });
+    }
+
+    function clearSelection() {
+      document.querySelectorAll('.piece.selected').forEach(piece => 
+        piece.classList.remove('selected'));
+      document.querySelectorAll('.valid-move').forEach(square => 
+        square.classList.remove('valid-move'));
+      selectedPiece = null;
+      validMoves = [];
+    }
+
+    function getValidMoves(row, col) {
+      const moves = [];
+      const piece = board[row][col];
+      const directions = piece.king ? [-1, 1] : piece.color === 'white' ? [-1] : [1];
+      
+      directions.forEach(dRow => {
+        [-1, 1].forEach(dCol => {
+          let jumpRow = row + dRow * 2;
+          let jumpCol = col + dCol * 2;
+          if (isValidPosition(jumpRow, jumpCol) && !board[jumpRow][jumpCol]) {
+            const jumpedRow = row + dRow;
+            const jumpedCol = col + dCol;
+            if (board[jumpedRow][jumpedCol] && 
+                board[jumpedRow][jumpedCol].color !== piece.color) {
+              moves.push({
+                row: jumpRow,
+                col: jumpCol,
+                capture: { row: jumpedRow, col: jumpedCol }
+              });
+            }
+          }
+          
+          let newRow = row + dRow;
+          let newCol = col + dCol;
+          if (isValidPosition(newRow, newCol) && !board[newRow][newCol]) {
+            moves.push({ row: newRow, col: newCol });
+          }
+        });
+      });
+      
+      const captureMoves = moves.filter(move => move.capture);
+      return captureMoves.length > 0 ? captureMoves : moves;
+    }
+
+    function isValidPosition(row, col) {
+      return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
+    }
+
+    function movePiece(from, toRow, toCol, capture) {
+      const piece = board[from.row][from.col];
+      board[from.row][from.col] = null;
+      board[toRow][toCol] = piece;
+      
+      if (capture) {
+        const capturedPiece = board[capture.row][capture.col];
+        if (capturedPiece) {
+          const capturedElement = document.querySelector(
+            `[data-row="${capture.row}"][data-col="${capture.col}"] .piece`
+          );
+          capturedElement.classList.add('captured-piece');
+          if (piece.color === 'white') {
+            playerScore++;
+          } else {
+            computerScore++;
+          }
+          board[capture.row][capture.col] = null;
+          updateScores();
+        }
+      }
+      
+      if ((piece.color === 'white' && toRow === 0) || 
+          (piece.color === 'black' && toRow === BOARD_SIZE - 1)) {
+        piece.king = true;
+      }
+      
+      createBoard();
+    }
+
+    function updateTurnIndicator() {
+      const indicator = document.getElementById('turnIndicator');
+      indicator.textContent = isComputerTurn ? "Computer's Turn" : "Your Turn";
+    }
+
+    function resetGame() {
+      isComputerTurn = false;
+      selectedPiece = null;
+      validMoves = [];
+      playerScore = 0;
+      computerScore = 0;
+      document.getElementById('winMessage').textContent = '';
+      document.getElementById('loseMessage').textContent = '';
+      initializeBoard();
+      createBoard();
+      updateScores();
+    }
+
+    resetGame();
+  </script>
+</body>
+</html>

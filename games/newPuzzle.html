@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Flow Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+            margin: 0;
+        }
+        .game-container {
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 350px;
+            border-radius: 8px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .grid-container {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .grid-cell {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .grid-cell:hover {
+            opacity: 0.7;
+            transform: scale(1.1);
+        }
+        .button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:disabled {
+            background-color: #ccc;
+        }
+        .button.secondary {
+            background-color: #28a745;
+        }
+        #timer {
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .winning {
+            animation: pulse 1s ease-out infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <div class="header">
+            <div id="level">Level: 1</div>
+            <div id="score">Score: 0</div>
+            <div id="moves">Moves: 0</div>
+        </div>
+        <div id="timer">Time Left: 60s</div>
+        <div class="grid-container" id="grid"></div>
+        <div class="controls">
+            <button id="restartBtn" class="button">Restart</button>
+            <button id="nextLevelBtn" class="button secondary" disabled>Next Level</button>
+        </div>
+    </div>
+
+    <script>
+        // Load sound effects
+        const clickSound = new Audio('click-sound.mp3'); // Replace with your audio file path
+        const winSound = new Audio('win-sound.mp3'); // Replace with your audio file path
+        const restartSound = new Audio('restart-sound.mp3'); // Replace with your audio file path
+
+        // Play sounds
+        function playClickSound() {
+            clickSound.play();
+        }
+
+        function playWinSound() {
+            winSound.play();
+        }
+
+        function playRestartSound() {
+            restartSound.play();
+        }
+
+        // Game state variables
+        let level = 1;
+        let moves = 0;
+        let score = 0;
+        let grid = [];
+        let gameWon = false;
+        let timer;
+        let timeLeft = 60; // 60 seconds for the timed mode
+        let tutorialStep = 0;
+
+        // Colors for the game
+        const colors = ['red', 'blue', 'green', 'yellow'];
+
+        // Initialize game grid
+        function initGrid(size) {
+            const newGrid = [];
+            for (let i = 0; i < size; i++) {
+                const row = [];
+                for (let j = 0; j < size; j++) {
+                    row.push({
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        isRotating: false
+                    });
+                }
+                newGrid.push(row);
+            }
+            return newGrid;
+        }
+
+        // Check if game is won
+        function checkWin(newGrid) {
+            const firstColor = newGrid[0][0].color;
+            return newGrid.every(row => 
+                row.every(cell => cell.color === firstColor)
+            );
+        }
+
+        // Handle cell click
+        function handleCellClick(rowIndex, colIndex) {
+            if (gameWon) return;
+
+            // Tutorial mode logic
+            if (tutorialStep < tutorialMessages.length) {
+                showTutorialMessage(tutorialMessages[tutorialStep]);
+                tutorialStep++;
+                return; // Skip normal game logic during tutorial
+            }
+
+            playClickSound(); // Play click sound on cell click
+
+            const newGrid = [...grid];
+            const currentColor = newGrid[rowIndex][colIndex].color;
+            const colorIndex = colors.indexOf(currentColor);
+            const nextColor = colors[(colorIndex + 1) % colors.length];
+
+            // Rotate colors in plus pattern
+            if (rowIndex > 0) newGrid[rowIndex - 1][colIndex].color = nextColor;
+            if (rowIndex < grid.length - 1) newGrid[rowIndex + 1][colIndex].color = nextColor;
+            if (colIndex > 0) newGrid[rowIndex][colIndex - 1].color = nextColor;
+            if (colIndex < grid.length - 1) newGrid[rowIndex][colIndex + 1].color = nextColor;
+            newGrid[rowIndex][colIndex].color = nextColor;
+
+            grid = newGrid;
+            moves++;
+
+            if (checkWin(newGrid)) {
+                gameWon = true;
+                playWinSound(); // Play win sound
+                score += Math.max(100 - moves, 10) * level;
+                document.getElementById('nextLevelBtn').disabled = false;
+                handleWin(); // Trigger winning animation
+            }
+            render();
+        }
+
+        // Render the game grid and stats
+        function render() {
+            document.getElementById('level').innerText = `Level: ${level}`;
+            document.getElementById('score').innerText = `Score: ${score}`;
+            document.getElementById('moves').innerText = `Moves: ${moves}`;
+
+            const gridContainer = document.getElementById('grid');
+            gridContainer.innerHTML = '';
+            const size = grid.length;
+            gridContainer.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+
+            grid.forEach((row, rowIndex) => {
+                row.forEach((cell, colIndex) => {
+                    const cellElement = document.createElement('div');
+                    cellElement.classList.add('grid-cell');
+                    cellElement.style.backgroundColor = cell.color;
+                    cellElement.onclick = () => handleCellClick(rowIndex, colIndex);
+                    gridContainer.appendChild(cellElement);
+                });
+            });
+        }
+
+        // Show tutorial message
+        function showTutorialMessage(message) {
+            alert(message); // Simple alert, replace with modal for better UX
+        }
+
+        // Tutorial steps
+        const tutorialMessages = [
+            "Welcome to Color Flow! Your goal is to make the entire grid the same color.",
+            "Click on a grid cell to change its color and the colors of surrounding cells.",
+            "Try clicking a few cells to see how it works!",
+            "Great job! Keep going until the entire grid is one color!",
+            "You've completed the tutorial! Press Next Level to continue."
+        ];
+
+        // Start tutorial mode
+        function startTutorial() {
+            tutorialStep = 0;
+            grid = initGrid(3); // Use smaller grid for tutorial
+            render();
+        }
+
+        // Start timed mode (level 2)
+        function startTimedMode() {
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').innerText = `Time Left: ${timeLeft}s`;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    alert("Time's up! Game over.");
+                    restartGame();
+                }
+            }, 1000);
+        }
+
+        // Winning animation
+        function handleWin() {
+            const gridCells = document.querySelectorAll('.grid-cell');
+            gridCells.forEach(cell => cell.classList.add('winning'));
+        }
+
+        // Restart game
+        function restartGame() {
+            playRestartSound(); // Play restart sound
+            gameWon = false;
+            moves = 0;
+            grid = initGrid(Math.min(3 + Math.floor(level / 2), 6));
+            render();
+
+            if (level === 1) {
+                startTutorial();
+            }
+        }
+
+        // Next level
+        function nextLevel() {
+            level++;
+            gameWon = false;
+            moves = 0;
+            timeLeft = 60; // Reset time for new level
+            document.getElementById('nextLevelBtn').disabled = true;
+
+            if (level === 2) {
+                startTimedMode();
+            } else {
+                grid = initGrid(Math.min(3 + Math.floor(level / 2), 6));
+            }
+            render();
+        }
+
+        // Initializing the game
+        document.getElementById('restartBtn').onclick = restartGame;
+        document.getElementById('nextLevelBtn').onclick = nextLevel;
+
+        if (level === 1) {
+            startTutorial();
+        } else {
+            grid = initGrid(3 + Math.floor(level / 2));
+            render();
+        }
+    </script>
+</body>
+</html>
