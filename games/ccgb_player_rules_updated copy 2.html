@@ -245,13 +245,13 @@ document.head.appendChild(style);
       transform: translate(-50%, -50%);
       width: 40%;
       height: 40%;
-      border: 2px solid #FF5722;
+      border: 2px solid #FF5722; /* Orange border for multiple captures */
       border-radius: 50%;
       animation: multiCapturePulse 1.5s infinite ease-in-out;
     }
 
     .square.valid-move.multiple-capture::after {
-      background: rgba(255, 87, 34, 0.5);
+      background: rgba(255, 87, 34, 0.5); /* Semi-transparent orange */
     }
 
 /* Highlight valid moves with a green circular outline */
@@ -505,52 +505,36 @@ function handleSquareClick(row, col) {
   }
 }
 
-    function selectPiece(row, col) {
+function selectPiece(row, col) {
       selectedPiece = { row, col };
-      const piece = board[row][col];
+      validMoves = getValidMoves(row, col);
       
-      if (!piece) {
-        console.error(`No piece found at row: ${row}, col: ${col}`);
-        return;
-      }
-
       const square = document.querySelector(`[data-row="${row}"][data-col="${col}"] .piece`);
       if (!square) {
-        console.error(`No piece element found at row: ${row}, col: ${col}`);
+        console.error(`No piece found at row: ${row}, col: ${col}`);
         return;
       }
       
       square.classList.add('selected');
       
-      // Find all possible capture sequences
-      const captures = findMaximumCaptures(row, col, piece);
+      // Find maximum capture sequence for this piece
+      const captures = findMaximumCaptures(row, col, board[row][col]);
       
-      // Get regular moves only if no captures are available
-      validMoves = captures.length > 0 ? captures : getValidMoves(row, col);
-
-      // Create a set of all valid move positions from the capture sequences
-      const validMovePositions = new Set();
-      if (captures.length > 0) {
-        captures.forEach(move => {
-          validMovePositions.add(`${move.row},${move.col}`);
-        });
-      }
-
-      // Show all valid moves
-      for (let r = 0; r < BOARD_SIZE; r++) {
-        for (let c = 0; c < BOARD_SIZE; c++) {
-          const moveSquare = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
-          if (!moveSquare) continue;
-
-          const posKey = `${r},${c}`;
-          if (validMovePositions.has(posKey)) {
-            moveSquare.classList.add('valid-move');
-            moveSquare.classList.add('multiple-capture');
-          } else if (!captures.length && validMoves.some(move => move.row === r && move.col === c)) {
-            moveSquare.classList.add('valid-move');
-          }
+      validMoves.forEach(move => {
+        const moveSquare = document.querySelector(`[data-row="${move.row}"][data-col="${move.col}"]`);
+        if (!moveSquare) {
+          console.warn(`No square found for move to row: ${move.row}, col: ${move.col}`);
+          return;
         }
-      }
+        
+        moveSquare.classList.add('valid-move');
+        
+        // Add special indicator for moves that are part of a multiple capture sequence
+        if (captures.length > 1 && captures.some(capture => 
+            capture.row === move.row && capture.col === move.col)) {
+          moveSquare.classList.add('multiple-capture');
+        }
+      });
     }
 
     function clearSelection() {
