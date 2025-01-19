@@ -299,45 +299,45 @@
 
     <!-- Automatic User Data Collection -->
     <script>
-        const userData = {
-            ipAddress: 'Unknown', // Backend will capture IP
-            browser: navigator.userAgent,
-            platform: navigator.platform,
-            language: navigator.language,
-            screenResolution: `${window.screen.width}x${window.screen.height}`,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            referrer: document.referrer || 'Direct Visit',
-        };
-
-        // Send data to backend
-        fetch('http://127.0.0.1:5000/collect-data', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(userData),
-        })
-        .then(response => response.json())
-        .then(data => console.log('Data sent:', data))
-        .catch(error => console.error('Error:', error));
-
         async function logVisitor() {
-            const response = await fetch('https://api.ipify.org?format=json'); // Fetch visitor IP
-            const { ip } = await response.json();
-            const visitorData = {
-                ip: ip,
-                browser: navigator.userAgent,
-                timestamp: new Date().toISOString(),
-            };
-
-            // Send data to Google Sheet
-            fetch('https://script.google.com/macros/s/AKfycbwa66L0pLolxJ_baieEFjtONnJbiyDRSOwzmt0R3LpfjjaWpSzSoc68szVlgFMqzizcbw/exec', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(visitorData),
-            });
+            try {
+                // Fetch visitor IP
+                const response = await fetch('https://api.ipify.org?format=json');
+                if (!response.ok) {
+                    console.error("Failed to fetch IP. Status:", response.status);
+                    return;
+                }
+                const { ip } = await response.json();
+    
+                // Prepare visitor data
+                const visitorData = {
+                    ip: ip,
+                    browser: navigator.userAgent,
+                    timestamp: new Date().toISOString()
+                };
+    
+                // Send data to Google Sheet via Google Apps Script
+                const sheetResponse = await fetch(
+                    'https://script.google.com/macros/s/AKfycbxDF-iLq0ionhOeKqNs6EOIejjwAHCEoq6zRl-7lO7WQH3bn8J76a7ZWv0lidz0B1PW/exec',
+                    {
+                        method: 'POST',
+                        mode: 'no-cors', // Add this line
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(visitorData),
+                    }
+                );
+    
+                console.log("Data sent:", visitorData);
+                
+            } catch (error) {
+                console.error("Unexpected error:", error);
+            }
+        }
+    
+        // Wait for page to load before executing
+        window.addEventListener('load', logVisitor);
         }
 
         logVisitor();
