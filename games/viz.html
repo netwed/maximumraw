@@ -19,13 +19,17 @@
 
             // Send data to Google Sheet
             fetch('https://script.google.com/macros/s/AKfycbzJiNFa1xEvn1LsYzVi8AJoQvNtcN2xLGHHvLYz0jgkzcN5tTwuFfBd7PiuM_wQvrWtpg/exec', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(visitorData),
-            });
-        }
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(visitorData),
+})
+    .then((response) => response.text())
+    .then((text) => console.log("Response from Apps Script:", text))
+    .catch((error) => console.error("Error sending data to Apps Script:", error));
+
+            }
 
         logVisitor();
     </script>
