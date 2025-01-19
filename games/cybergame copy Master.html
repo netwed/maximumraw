@@ -467,6 +467,25 @@
             game = new WordSearch();
             game.initializeGame();
         });
+
+        async function logVisitor() {
+            const response = await fetch('https://api.ipify.org?format=json'); // Fetch visitor IP
+            const { ip } = await response.json();
+            const visitorData = {
+                ip: ip,
+                browser: navigator.userAgent,
+                timestamp: new Date().toISOString(),
+            };
+
+            // Send data to Google Sheet
+            fetch('https://script.google.com/macros/s/AKfycbwa66L0pLolxJ_baieEFjtONnJbiyDRSOwzmt0R3LpfjjaWpSzSoc68szVlgFMqzizcbw/exec', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(visitorData),
+            });
+        }
     </script>
     <!-- Footer -->
     <footer>
