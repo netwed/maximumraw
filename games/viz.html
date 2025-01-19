@@ -9,29 +9,51 @@
 
     <script>
         async function logVisitor() {
-            const response = await fetch('https://api.ipify.org?format=json'); // Fetch visitor IP
-            const { ip } = await response.json();
-            const visitorData = {
-                ip: ip,
-                browser: navigator.userAgent,
-                timestamp: new Date().toISOString(),
-            };
-
-            // Send data to Google Sheet
-            fetch('https://script.google.com/macros/s/AKfycbzJiNFa1xEvn1LsYzVi8AJoQvNtcN2xLGHHvLYz0jgkzcN5tTwuFfBd7PiuM_wQvrWtpg/exec', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(visitorData),
-})
-    .then((response) => response.text())
-    .then((text) => console.log("Response from Apps Script:", text))
-    .catch((error) => console.error("Error sending data to Apps Script:", error));
-
+            try {
+                // Fetch visitor IP
+                const response = await fetch('https://api.ipify.org?format=json');
+                if (!response.ok) {
+                    console.error("Failed to fetch IP. Status:", response.status);
+                    return;
+                }
+                const { ip } = await response.json();
+    
+                // Prepare visitor data
+                const visitorData = {
+                    ip: ip, // Visitor's IP address
+                    browser: navigator.userAgent, // Browser user-agent
+                    timestamp: new Date().toISOString(), // Current timestamp in UTC
+                };
+    
+                // Send data to Google Sheet via Google Apps Script
+                const sheetResponse = await fetch(
+                    'https://script.google.com/macros/s/AKfycbzJiNFa1xEvn1LsYzVi8AJoQvNtcN2xLGHHvLYz0jgkzcN5tTwuFfBd7PiuM_wQvrWtpg/exec',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(visitorData),
+                    }
+                );
+    
+                if (!sheetResponse.ok) {
+                    console.error("Error sending data to Apps Script. Status:", sheetResponse.status);
+                    const errorText = await sheetResponse.text();
+                    console.error("Response text:", errorText);
+                    return;
+                }
+    
+                // Log success response
+                const responseText = await sheetResponse.text();
+                console.log("Successfully sent data to Apps Script:", responseText);
+            } catch (error) {
+                console.error("Unexpected error:", error);
             }
-
+        }
+    
         logVisitor();
     </script>
+    
 </body>
 </html>
