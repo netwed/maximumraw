@@ -477,15 +477,27 @@
                 timestamp: new Date().toISOString(),
             };
 
-            // Send data to Google Sheet
-            fetch('https://script.google.com/macros/s/AKfycbwa66L0pLolxJ_baieEFjtONnJbiyDRSOwzmt0R3LpfjjaWpSzSoc68szVlgFMqzizcbw/exec', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(visitorData),
-            });
+        // Send data to Google Apps Script
+        const postResponse = await fetch('https://script.google.com/macros/s/AKfycbwa66L0pLolxJ_baieEFjtONnJbiyDRSOwzmt0R3LpfjjaWpSzSoc68szVlgFMqzizcbw/exec', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(visitorData),
+        });
+
+        // Check if the response is successful
+        if (!postResponse.ok) {
+            throw new Error('Failed to send data to Google Apps Script');
         }
+
+        const result = await postResponse.json();
+        console.log('Visitor data logged successfully:', result);
+
+    } catch (error) {
+        console.error('Error in logVisitor:', error);
+    }
+
     </script>
     <!-- Footer -->
     <footer>
