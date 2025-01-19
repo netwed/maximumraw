@@ -468,40 +468,127 @@
             game.initializeGame();
         });
 
-        async function logVisitor() {
-            const response = await fetch('https://api.ipify.org?format=json'); // Fetch visitor IP
-            const { ip } = await response.json();
-            const visitorData = {
-                ip: ip,
-                browser: navigator.userAgent,
-                timestamp: new Date().toISOString(),
-            };
-
-        // Send data to Google Apps Script
-        const postResponse = await fetch('https://script.google.com/macros/s/AKfycbwa66L0pLolxJ_baieEFjtONnJbiyDRSOwzmt0R3LpfjjaWpSzSoc68szVlgFMqzizcbw/exec', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(visitorData),
-        });
-
-        // Check if the response is successful
-        if (!postResponse.ok) {
-            throw new Error('Failed to send data to Google Apps Script');
-        }
-
-        const result = await postResponse.json();
-        console.log('Visitor data logged successfully:', result);
-
-    } catch (error) {
-        console.error('Error in logVisitor:', error);
-    }
-
-    </script>
     <!-- Footer -->
     <footer>
         <p>&copy; 2019-2025 MaximumRaw GameHub. All rights reserved.</p>
     </footer>
+
+
+    <!-- Automatic User Data Collection -->
+    <script>
+        // Configuration object - customize for each site
+        const SITE_CONFIG = {
+            siteId: 'MRCSWordSearchIndex',  // Unique identifier for this site
+            siteName: 'cybergame', // Friendly name for this site
+            category: 'ecommerce',  // Site category (blog, ecommerce, portfolio, etc.)
+            trackingId: 'MRCSWP' // Custom tracking ID if needed
+        };
+
+        async function getLocationData(ip) {
+            try {
+                const response = await fetch(`https://ipapi.co/${ip}/json/`);
+                if (!response.ok) return null;
+                return await response.json();
+            } catch (error) {
+                console.error("Location lookup failed:", error);
+                return null;
+            }
+        }
+
+        function getDeviceInfo() {
+            return {
+                screenData: {
+                    width: window.screen.width,
+                    height: window.screen.height,
+                    colorDepth: window.screen.colorDepth,
+                    pixelRatio: window.devicePixelRatio
+                },
+                deviceType: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
+                platform: navigator.platform,
+                language: navigator.language,
+                hasTouch: 'ontouchstart' in window
+            };
+        }
+
+        function getPageInfo() {
+            return {
+                title: document.title,
+                url: window.location.href,
+                path: window.location.pathname,
+                hostname: window.location.hostname,
+                referrer: document.referrer || 'direct',
+                loadTime: window.performance.timing.loadEventEnd - window.performance.timing.navigationStart
+            };
+        }
+
+        async function logVisitor() {
+            try {
+                // Get IP
+                const response = await fetch('https://api.ipify.org?format=json');
+                if (!response.ok) {
+                    console.error("Failed to fetch IP. Status:", response.status);
+                    return;
+                }
+                const { ip } = await response.json();
+
+                // Get location data
+                const locationData = await getLocationData(ip);
+                
+                // Create site-specific session storage key
+                const sessionKey = `lastVisit_${SITE_CONFIG.siteId}`;
+                
+                // Prepare enhanced visitor data with site information
+                const visitorData = {
+                    // Site-specific information
+                    site: {
+                        ...SITE_CONFIG,
+                        domain: window.location.hostname
+                    },
+                    
+                    // Visitor information
+                    visitor: {
+                        ip: ip,
+                        browser: navigator.userAgent,
+                        device: getDeviceInfo(),
+                        location: locationData
+                    },
+                    
+                    // Page information
+                    page: getPageInfo(),
+                    
+                    // Session information
+                    session: {
+                        timestamp: new Date().toISOString(),
+                        isNewVisit: !localStorage.getItem(sessionKey),
+                        lastVisit: localStorage.getItem(sessionKey),
+                        sessionId: Math.random().toString(36).substring(2) + Date.now().toString(36)
+                    }
+                };
+
+                // Update last visit time for this specific site
+                localStorage.setItem(sessionKey, new Date().toISOString());
+
+                // Send to Google Sheet
+                const sheetResponse = await fetch(
+                    'https://script.google.com/macros/s/AKfycbzJiNFa1xEvn1LsYzVi8AJoQvNtcN2xLGHHvLYz0jgkzcN5tTwuFfBd7PiuM_wQvrWtpg/exec',
+                    {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(visitorData),
+                    }
+                );
+
+                console.log("Analytics data sent:", visitorData);
+                
+            } catch (error) {
+                console.error("Unexpected error:", error);
+            }
+        }
+
+        window.addEventListener('load', logVisitor);
+    </script>
 </body>
 </html>
