@@ -20,9 +20,9 @@
     
                 // Prepare visitor data
                 const visitorData = {
-                    ip: ip, // Visitor's IP address
-                    browser: navigator.userAgent, // Browser user-agent
-                    timestamp: new Date().toISOString(), // Current timestamp in UTC
+                    ip: ip,
+                    browser: navigator.userAgent,
+                    timestamp: new Date().toISOString()
                 };
     
                 // Send data to Google Sheet via Google Apps Script
@@ -30,6 +30,7 @@
                     'https://script.google.com/macros/s/AKfycbzJiNFa1xEvn1LsYzVi8AJoQvNtcN2xLGHHvLYz0jgkzcN5tTwuFfBd7PiuM_wQvrWtpg/exec',
                     {
                         method: 'POST',
+                        mode: 'no-cors', // Add this line
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -37,23 +38,15 @@
                     }
                 );
     
-                if (!sheetResponse.ok) {
-                    console.error("Error sending data to Apps Script. Status:", sheetResponse.status);
-                    const errorText = await sheetResponse.text();
-                    console.error("Response text:", errorText);
-                    return;
-                }
-    
-                // Log success response
-                const responseText = await sheetResponse.text();
-                console.log("Successfully sent data to Apps Script:", responseText);
+                console.log("Data sent:", visitorData);
+                
             } catch (error) {
                 console.error("Unexpected error:", error);
             }
         }
     
-        logVisitor();
+        // Wait for page to load before executing
+        window.addEventListener('load', logVisitor);
     </script>
-    
 </body>
 </html>
