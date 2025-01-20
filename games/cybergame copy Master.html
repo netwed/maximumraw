@@ -468,20 +468,13 @@
             game.initializeGame();
         });
 
-    <!-- Footer -->
-    <footer>
-        <p>&copy; 2019-2025 MaximumRaw GameHub. All rights reserved.</p>
-    </footer>
-
-
-    <!-- Automatic User Data Collection -->
-    <script>
+        <!-- Automatic User Data Collection -->
         // Configuration object - customize for each site
         const SITE_CONFIG = {
-            siteId: 'MRCSWordSearchIndex',  // Unique identifier for this site
-            siteName: 'cybergame', // Friendly name for this site
+            siteId: 'MRCyberGame',  // Unique identifier for this site
+            siteName: 'maximumrawCyberGame', // Friendly name for this site
             category: 'ecommerce',  // Site category (blog, ecommerce, portfolio, etc.)
-            trackingId: 'MRCSWP' // Custom tracking ID if needed
+            trackingId: 'MRCGIX' // Custom tracking ID if needed
         };
 
         async function getLocationData(ip) {
@@ -570,7 +563,7 @@
 
                 // Send to Google Sheet
                 const sheetResponse = await fetch(
-                    'https://script.google.com/macros/s/AKfycbzJiNFa1xEvn1LsYzVi8AJoQvNtcN2xLGHHvLYz0jgkzcN5tTwuFfBd7PiuM_wQvrWtpg/exec',
+                    'https://script.google.com/macros/s/AKfycbyXC3VGHGW3kptDDfVyO1TFf2peMeQzpm2xHeidbHuAJ2mihhTvPadHcmC_wmM0PCIdNA/exec',
                     {
                         method: 'POST',
                         mode: 'no-cors',
@@ -590,5 +583,9 @@
 
         window.addEventListener('load', logVisitor);
     </script>
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2019-2025 MaximumRaw GameHub. All rights reserved.</p>
+    </footer>
 </body>
 </html>
