@@ -954,25 +954,30 @@ let analyticsData = {
         totalGoals: 0
     },
     habitMetrics: {
-        completed: 0,
-        total: 0,
+        streaks: {},
         completionRate: 0
     },
     timeMetrics: {
-        busyHours: Array(24).fill(0)
+        busyHours: [],
+        productiveTime: 0
     }
 };
 
 // Update analytics whenever data changes
 function updateAnalytics() {
+    // Reset metrics
+    analyticsData = {
+        taskMetrics: { completed: 0, total: 0, categoryBreakdown: {} },
+        goalMetrics: { averageProgress: 0, totalGoals: 0 },
+        habitMetrics: { streaks: {}, completionRate: 0 },
+        timeMetrics: { busyHours: [], productiveTime: 0 }
+    };
+
     // Calculate task metrics
     analyticsData.taskMetrics.total = tasks.length;
     analyticsData.taskMetrics.completed = tasks.filter(task => task.completed).length;
-    analyticsData.taskMetrics.completionRate = tasks.length > 0 ? 
-        (analyticsData.taskMetrics.completed / analyticsData.taskMetrics.total) * 100 : 0;
     
-    // Reset and recalculate category breakdown
-    analyticsData.taskMetrics.categoryBreakdown = {};
+    // Category breakdown
     tasks.forEach(task => {
         if (!analyticsData.taskMetrics.categoryBreakdown[task.category]) {
             analyticsData.taskMetrics.categoryBreakdown[task.category] = 0;
@@ -982,114 +987,121 @@ function updateAnalytics() {
 
     // Calculate goal metrics
     analyticsData.goalMetrics.totalGoals = goals.length;
-    analyticsData.goalMetrics.averageProgress = goals.length > 0 ? 
-        goals.reduce((sum, goal) => sum + (goal.progress || 0), 0) / goals.length : 0;
-
-    // Calculate habit metrics
-    analyticsData.habitMetrics.total = habits.length;
-    analyticsData.habitMetrics.completed = habits.filter(habit => habit.completed).length;
-    analyticsData.habitMetrics.completionRate = habits.length > 0 ? 
-        (analyticsData.habitMetrics.completed / analyticsData.habitMetrics.total) * 100 : 0;
-
-    // Calculate time metrics
-    analyticsData.timeMetrics.busyHours = Array(24).fill(0);
-    events.forEach(event => {
-        const hour = parseInt(event.time.split(':')[0]);
-        if (!isNaN(hour) && hour >= 0 && hour < 24) {
-            analyticsData.timeMetrics.busyHours[hour]++;
-        }
-    });
-
-    renderAnalyticsChart();
-    renderAnalyticsSummary();
-}
-
-// Render the analytics chart
-function renderAnalyticsChart() {
-    const canvas = document.getElementById('analytics-chart');
-    if (!canvas) return;
-
-    // Destroy existing chart if it exists
-    if (window.myChart) {
-        window.myChart.destroy();
+    if (goals.length > 0) {
+        const totalProgress = goals.reduce((sum, goal) => sum + (goal.progress || 0), 0);
+        analyticsData.goalMetrics.averageProgress = totalProgress / goals.length;
     }
 
-    // Create new chart
-    window.myChart = new Chart(canvas, {
-        type: 'bar',
-        data: {
-            labels: ['Tasks', 'Goals', 'Habits'],
-            datasets: [{
-                label: 'Completion Rate (%)',
-                data: [
-                    analyticsData.taskMetrics.completionRate,
-                    analyticsData.goalMetrics.averageProgress,
-                    analyticsData.habitMetrics.completionRate
-                ],
-                backgroundColor: [
-                    'rgba(75, 192, 192, 0.6)',
-                    'rgba(54, 162, 235, 0.6)',
-                    'rgba(153, 102, 255, 0.6)'
-                ],
-                borderColor: [
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(153, 102, 255, 1)'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    ticks: {
-                        callback: function(value) {
-                            return value + '%';
-                        }
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top'
+    // Calculate habit metrics
+    if (habits.length > 0) {
+        const completedHabits = habits.filter(habit => habit.completed).length;
+        analyticsData.habitMetrics.completionRate = (completedHabits / habits.length) * 100;
+    }
+
+    // Calculate time metrics from events
+    analyticsData.timeMetrics.busyHours = Array(24).fill(0); // Initialize array for all 24 hours
+    events.forEach(event => {
+        const hour = parseInt(event.time.split(':')[0]);
+        analyticsData.timeMetrics.busyHours[hour]++;
+    });
+
+    renderAnalytics();
+    saveToLocalStorage();
+}
+
+// Render analytics visualizations
+function updateAnalytics() {
+            // Calculate metrics
+            const taskMetrics = {
+                total: tasks.length,
+                completed: tasks.filter(t => t.completed).length,
+                completion_rate: tasks.length > 0 ? 
+                    (tasks.filter(t => t.completed).length / tasks.length) * 100 : 0
+            };
+
+            const goalMetrics = {
+                total: goals.length,
+                average_progress: goals.length > 0 ? 
+                    goals.reduce((acc, g) => acc + (g.progress || 0), 0) / goals.length : 0
+            };
+
+            const habitMetrics = {
+                total: habits.length,
+                completed: habits.filter(h => h.completed).length,
+                completion_rate: habits.length > 0 ? 
+                    (habits.filter(h => h.completed).length / habits.length) * 100 : 0
+            };
+
+            // Get the canvas context
+            const canvas = document.getElementById('analytics-chart');
+            if (!canvas) return;
+
+            // Clear existing chart if it exists
+            if (window.myChart) {
+                window.myChart.destroy();
+            }
+
+            // Create new chart
+            window.myChart = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: ['Tasks', 'Goals', 'Habits'],
+                    datasets: [{
+                        label: 'Completion Rate (%)',
+                        data: [
+                            taskMetrics.completion_rate,
+                            goalMetrics.average_progress,
+                            habitMetrics.completion_rate
+                        ],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.6)',
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(153, 102, 255, 0.6)'
+                        ],
+                        borderWidth: 1
+                    }]
                 },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `${context.dataset.label}: ${context.raw.toFixed(1)}%`;
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
                         }
                     }
                 }
+            });
+
+            // Update summary
+            const summaryDiv = document.getElementById('analytics-summary');
+            if (summaryDiv) {
+                summaryDiv.innerHTML = `
+                    <p>Tasks: ${taskMetrics.completed}/${taskMetrics.total} completed (${taskMetrics.completion_rate.toFixed(1)}%)</p>
+                    <p>Goals: Average progress ${goalMetrics.average_progress.toFixed(1)}%</p>
+                    <p>Habits: ${habitMetrics.completed}/${habitMetrics.total} completed (${habitMetrics.completion_rate.toFixed(1)}%)</p>
+                `;
             }
         }
-    });
-}
 
-// Render the analytics summary
-function renderAnalyticsSummary() {
-    const summaryDiv = document.getElementById('analytics-summary');
-    if (!summaryDiv) return;
+        // Ensure analytics gets updated whenever data changes
+        function saveToLocalStorage() {
+            const data = {
+                tasks,
+                goals,
+                events,
+                habits,
+                theme: currentTheme
+            };
+            localStorage.setItem('plannerData', JSON.stringify(data));
+            updateAnalytics(); // Add this line to update analytics when data changes
+        }
 
-    summaryDiv.innerHTML = `
-        <p><strong>Tasks:</strong> ${analyticsData.taskMetrics.completed}/${analyticsData.taskMetrics.total} completed (${analyticsData.taskMetrics.completionRate.toFixed(1)}%)</p>
-        <p><strong>Goals:</strong> Average progress ${analyticsData.goalMetrics.averageProgress.toFixed(1)}%</p>
-        <p><strong>Habits:</strong> ${analyticsData.habitMetrics.completed}/${analyticsData.habitMetrics.total} completed (${analyticsData.habitMetrics.completionRate.toFixed(1)}%)</p>
-        <p><strong>Most Active Hour:</strong> ${getMostActiveHour()}</p>
-    `;
-}
-
-// Helper function to get the most active hour
-function getMostActiveHour() {
-    const maxEvents = Math.max(...analyticsData.timeMetrics.busyHours);
-    const hour = analyticsData.timeMetrics.busyHours.indexOf(maxEvents);
-    if (maxEvents === 0) return 'No events scheduled';
-    return `${hour.toString().padStart(2, '0')}:00 (${maxEvents} events)`;
-}
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             loadFromLocalStorage();
