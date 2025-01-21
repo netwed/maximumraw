@@ -294,6 +294,42 @@
         .drag-over {
             border: 2px dashed #4CAF50;
         }
+        .analytics-container {
+    padding: 1rem;
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.analytics-card {
+    background: var(--card-background);
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.analytics-card h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+
+.metric-large {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin: 0.5rem 0;
+}
+
+.metric-small {
+    font-size: 0.9rem;
+    color: var(--text-color);
+    opacity: 0.8;
+}
     </style>
 </head>
 <body>
@@ -387,8 +423,7 @@
 
             <div class="card">
                 <h2>Analytics</h2>
-                <canvas id="analytics-chart"></canvas>
-                <div id="analytics-summary" class="analytics-summary"></div>
+                <div id="analytics-root"></div>
             </div>
         </div>
     </div>
@@ -396,8 +431,135 @@
     <div class="notification" id="notification"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
     <script>
+// WebAnalytics.js
+const WebAnalytics = () => {
+    const [analyticsData, setAnalyticsData] = React.useState({
+        taskMetrics: { completed: 0, total: 0, categoryBreakdown: {} },
+        goalMetrics: { averageProgress: 0, totalGoals: 0 },
+        habitMetrics: { completionRate: 0 },
+        timeMetrics: { busyHours: [] }
+    });
 
+    React.useEffect(() => {
+        const loadData = () => {
+            const data = localStorage.getItem('plannerData');
+            if (data) {
+                const parsed = JSON.parse(data);
+                updateAnalytics(parsed);
+            }
+        };
+
+        // Initial load
+        loadData();
+
+        // Set up event listener for storage changes
+        window.addEventListener('storage', loadData);
+        
+        // Set up custom event listener for local updates
+        window.addEventListener('plannerDataUpdated', loadData);
+        
+        return () => {
+            window.removeEventListener('storage', loadData);
+            window.removeEventListener('plannerDataUpdated', loadData);
+        };
+    }, []);
+
+    const updateAnalytics = (data) => {
+        const { tasks = [], goals = [], habits = [], events = [] } = data;
+        
+        // Calculate task metrics
+        const completed = tasks.filter(task => task.completed).length;
+        const categoryBreakdown = tasks.reduce((acc, task) => {
+            acc[task.category] = (acc[task.category] || 0) + 1;
+            return acc;
+        }, {});
+
+        // Calculate goal metrics
+        const averageProgress = goals.length > 0
+            ? goals.reduce((sum, goal) => sum + (goal.progress || 0), 0) / goals.length
+            : 0;
+
+        // Calculate habit metrics
+        const habitCompletionRate = habits.length > 0
+            ? (habits.filter(habit => habit.completed).length / habits.length) * 100
+            : 0;
+
+        // Calculate busy hours
+        const busyHours = Array(24).fill(0);
+        events.forEach(event => {
+            const hour = parseInt(event.time.split(':')[0]);
+            if (!isNaN(hour)) {
+                busyHours[hour]++;
+            }
+        });
+
+        setAnalyticsData({
+            taskMetrics: {
+                completed,
+                total: tasks.length,
+                categoryBreakdown
+            },
+            goalMetrics: {
+                averageProgress,
+                totalGoals: goals.length
+            },
+            habitMetrics: {
+                completionRate: habitCompletionRate
+            },
+            timeMetrics: {
+                busyHours: busyHours.map((count, hour) => ({
+                    hour: `${hour.toString().padStart(2, '0')}:00`,
+                    count
+                }))
+            }
+        });
+    };
+
+    const completionData = [
+        { name: 'Tasks', rate: (analyticsData.taskMetrics.completed / analyticsData.taskMetrics.total) * 100 || 0 },
+        { name: 'Goals', rate: analyticsData.goalMetrics.averageProgress },
+        { name: 'Habits', rate: analyticsData.habitMetrics.completionRate }
+    ];
+
+    return React.createElement('div', { className: 'analytics-container' },
+        React.createElement('div', { className: 'analytics-grid' },
+            // Task Card
+            React.createElement('div', { className: 'analytics-card' },
+                React.createElement('h3', null, 'Tasks'),
+                React.createElement('p', { className: 'metric-large' },
+                    `${((analyticsData.taskMetrics.completed / analyticsData.taskMetrics.total) * 100 || 0).toFixed(1)}%`
+                ),
+                React.createElement('p', { className: 'metric-small' },
+                    `${analyticsData.taskMetrics.completed} / ${analyticsData.taskMetrics.total} completed`
+                )
+            ),
+            // Goals Card
+            React.createElement('div', { className: 'analytics-card' },
+                React.createElement('h3', null, 'Goals'),
+                React.createElement('p', { className: 'metric-large' },
+                    `${analyticsData.goalMetrics.averageProgress.toFixed(1)}%`
+                ),
+                React.createElement('p', { className: 'metric-small' },
+                    `Average progress across ${analyticsData.goalMetrics.totalGoals} goals`
+                )
+            ),
+            // Habits Card
+            React.createElement('div', { className: 'analytics-card' },
+                React.createElement('h3', null, 'Habits'),
+                React.createElement('p', { className: 'metric-large' },
+                    `${analyticsData.habitMetrics.completionRate.toFixed(1)}%`
+                ),
+                React.createElement('p', { className: 'metric-small' },
+                    'Completion rate'
+                )
+            )
+        )
+    );
+};
         // State management
         let tasks = [];
         let goals = [];
@@ -625,137 +787,84 @@ function getDragAfterElement(container, y) {
     }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
 
-// Add a new goal
-function addGoal() {
-    const goalInput = document.getElementById('new-goal');
-    if (goalInput.value.trim() === '') {
-        showNotification('Goal cannot be empty');
-        return;
-    }
+        // Add a new goal
+        function addGoal() {
+            const goalInput = document.getElementById('new-goal');
+            if (goalInput.value.trim() === '') {
+                showNotification('Goal cannot be empty');
+                return;
+            }
 
-    const goal = {
-        id: Date.now(),
-        text: goalInput.value.trim(),
-        progress: 0,
-        completed: false,
-        createdAt: new Date()
-    };
+            const goal = {
+                id: Date.now(),
+                text: goalInput.value.trim(),
+                progress: 0,
+                createdAt: new Date()
+            };
 
-    goals.push(goal);
-    renderGoals();
-    goalInput.value = '';
-    saveToLocalStorage();
-}
-
-// Render all goals
-function renderGoals() {
-    const goalList = document.getElementById('goal-list');
-    goalList.innerHTML = '';
-
-    goals.forEach(goal => {
-        const goalElement = document.createElement('div');
-        goalElement.className = `task-item ${goal.completed ? 'completed' : ''}`;
-        goalElement.innerHTML = `
-            <div>
-                <input type="checkbox" ${goal.completed ? 'checked' : ''} 
-                       onchange="toggleGoal(${goal.id})">
-                <span class="${goal.completed ? 'completed' : ''}">${goal.text}</span>
-                <div class="progress-bar">
-                    <div class="progress-bar-fill" style="width: ${goal.progress}%"></div>
-                </div>
-            </div>
-            <div>
-                <button onclick="updateGoalProgress(${goal.id})">
-                    <i class="fas fa-percentage"></i>
-                </button>
-                <button onclick="editGoal(${goal.id})">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button onclick="deleteGoal(${goal.id})">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        `;
-        goalList.appendChild(goalElement);
-    });
-}
-
-// Toggle Goal Completion
-function toggleGoal(goalId) {
-    const goal = goals.find(goal => goal.id === goalId);
-    if (goal) {
-        goal.completed = !goal.completed;
-        // If goal is completed, set progress to 100%
-        if (goal.completed) {
-            goal.progress = 100;
+            goals.push(goal);
+            renderGoals();
+            goalInput.value = '';
+            saveToLocalStorage();
         }
-        renderGoals();
-        saveToLocalStorage();
-        showNotification(goal.completed ? 'Goal completed!' : 'Goal marked as in progress');
-    }
-}
 
-// Edit Goal
-function editGoal(goalId) {
-    const goal = goals.find(g => g.id === goalId);
-    if (!goal) {
-        showNotification('Goal not found');
-        return;
-    }
+        // Render all goals
+        function renderGoals() {
+            const goalList = document.getElementById('goal-list');
+            goalList.innerHTML = '';
 
-    const newText = prompt("Edit your goal:", goal.text);
-    if (newText && newText.trim() !== '') {
-        goal.text = newText.trim();
-        renderGoals();
-        saveToLocalStorage();
-        showNotification('Goal updated successfully');
-    } else if (newText !== null) {
-        showNotification('Goal text cannot be empty');
-    }
-}
-
-// Delete Goal
-function deleteGoal(goalId) {
-    const goalIndex = goals.findIndex(g => g.id === goalId);
-    if (goalIndex === -1) {
-        showNotification('Goal not found');
-        return;
-    }
-
-    if (confirm('Are you sure you want to delete this goal?')) {
-        goals.splice(goalIndex, 1);
-        renderGoals();
-        saveToLocalStorage();
-        showNotification('Goal deleted successfully');
-    }
-}
-
-// Update Goal Progress
-function updateGoalProgress(goalId) {
-    const goal = goals.find(goal => goal.id === goalId);
-    if (!goal) {
-        showNotification('Goal not found');
-        return;
-    }
-
-    const newProgress = prompt("Enter progress percentage (0-100):", goal.progress);
-    const progressValue = parseInt(newProgress);
-    
-    if (!isNaN(progressValue) && progressValue >= 0 && progressValue <= 100) {
-        goal.progress = progressValue;
-        // If progress is 100%, mark as completed
-        if (progressValue === 100) {
-            goal.completed = true;
-        } else {
-            goal.completed = false;
+            goals.forEach(goal => {
+                const goalElement = document.createElement('div');
+                goalElement.className = 'task-item';
+                goalElement.innerHTML = `
+                    <div>
+                        <span>${goal.text}</span>
+                        <div class="progress-bar">
+                            <div class="progress-bar-fill" style="width: ${goal.progress}%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <button onclick="editGoal(${goal.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteGoal(${goal.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                goalList.appendChild(goalElement);
+            });
         }
-        renderGoals();
-        saveToLocalStorage();
-        showNotification(`Progress updated to ${progressValue}%`);
-    } else if (newProgress !== null) {
-        showNotification('Please enter a valid number between 0 and 100');
-    }
-}
+
+        // Edit Goal
+        function editGoal(goalId) {
+            const goal = goals.find(goal => goal.id === goalId);
+            if (!goal) return;
+
+            const newText = prompt("Edit your goal:", goal.text);
+            if (newText && newText.trim() !== '') {
+                goal.text = newText.trim();
+                renderGoals();
+                saveToLocalStorage();
+            }
+        }
+
+        // Delete Goal
+        function deleteGoal(goalId) {
+            goals = goals.filter(goal => goal.id !== goalId);
+            renderGoals();
+            saveToLocalStorage();
+        }
+                // Toggle Goal Completion (Checkbox)
+                function toggleGoal(goalId) {
+            const goal = goal.find(goal => goal.id === goalId);
+            if (goal) {
+                goal.completed = !goal.completed;
+                renders();
+                saveToLocalStorage();
+            }
+        }
+
         // Add a new habit
         function addHabit() {
             const habitInput = document.getElementById('new-habit');
