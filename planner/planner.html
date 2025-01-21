@@ -1,0 +1,1116 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Productivity Planner</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Base styles */
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #45a049;
+            --background-color: #f4f4f9;
+            --card-background: white;
+            --text-color: #333;
+            --border-color: #ddd;
+        }
+
+        .dark-mode {
+            --primary-color: #66bb6a;
+            --secondary-color: #4caf50;
+            --background-color: #1a1a1a;
+            --card-background: #2d2d2d;
+            --text-color: #ffffff;
+            --border-color: #404040;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        /* Header and Navigation */
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .user-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        /* Dashboard Layout */
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .calendar-widget {
+            background: var(--card-background);
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-background);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Task Management */
+        .task-container {
+            margin-top: 1rem;
+        }
+
+        .task-input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .task-item {
+            background: var(--background-color);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: grab;
+            transition: background-color 0.2s;
+        }
+
+        .task-item:hover {
+            background-color: var(--border-color);
+        }
+
+        /* Goal Tracking */
+        .progress-bar {
+            background-color: var(--border-color);
+            border-radius: 12px;
+            height: 8px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-bar-fill {
+            background-color: var(--primary-color);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        /* Pomodoro Timer */
+        .pomodoro {
+            text-align: center;
+        }
+
+        .pomodoro-timer {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 1rem 0;
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        /* Buttons and Inputs */
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        input[type="text"], 
+        input[type="time"],
+        select {
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--card-background);
+            color: var(--text-color);
+        }
+        #analytics-chart {
+            width: 100% !important;
+            height: 300px !important;
+            margin-bottom: 1rem;
+        }
+
+        .analytics-summary {
+            padding: 1rem;
+            background: var(--card-background);
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .task-input-group {
+                flex-direction: column;
+            }
+            
+            .task-input-group input,
+            .task-input-group select,
+            .task-input-group button {
+                max-width: 100%;
+            }
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        /* Analytics */
+        .analytics-chart {
+            width: 100%;
+            height: 200px;
+            margin-top: 1rem;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+
+        .completed {
+            text-decoration: line-through;
+            color: #666;
+        }
+
+        .calendar-day {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            min-height: 80px;
+        }
+
+        .calendar-day.empty {
+            background-color: var(--background-color);
+        }
+
+        .calendar-day.today {
+            background-color: rgba(76, 175, 80, 0.1);
+            font-weight: bold;
+        }
+
+        .calendar-day-header {
+            padding: 10px;
+            font-weight: bold;
+            text-align: center;
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            margin-top: 1rem;
+        }
+
+        .calendar-tasks {
+            font-size: 0.8em;
+            color: var(--primary-color);
+            margin-top: 5px;
+        }
+
+        .badge {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 8px;
+        }
+
+        .dragging {
+            opacity: 0.5;
+        }
+
+        .drag-over {
+            border: 2px dashed #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Productivity Planner</h1>
+            <div class="user-controls">
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button onclick="showNotification('Syncing data...')">
+                    <i class="fas fa-sync"></i>
+                </button>
+                <button onclick="toggleUserMenu()">
+                    <i class="fas fa-user"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="dashboard-header">
+            <h2>Dashboard</h2>
+            <div class="date-filter">
+                <select onchange="updateDashboard(this.value)">
+                    <option value="daily">Daily View</option>
+                    <option value="weekly">Weekly View</option>
+                    <option value="monthly">Monthly View</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="calendar-widget" id="calendar">
+            <!-- Calendar will be dynamically generated -->
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>Task Management</h2>
+                <div class="task-input-group">
+                    <input type="text" id="new-task" placeholder="Enter a new task">
+                    <select id="task-category">
+                        <option value="work">Work</option>
+                        <option value="personal">Personal</option>
+                        <option value="health">Health</option>
+                    </select>
+                    <button onclick="addTask()">Add Task</button>
+                </div>
+                <div id="task-list" class="task-container"></div>
+            </div>
+
+            <div class="card">
+                <h2>Goals</h2>
+                <div class="task-input-group">
+                    <input type="text" id="new-goal" placeholder="Enter a new goal">
+                    <button onclick="addGoal()">Add Goal</button>
+                </div>
+                <div id="goal-list"></div>
+            </div>
+
+            <div class="card">
+                <h2>Pomodoro Timer</h2>
+                <div class="pomodoro">
+                    <div class="pomodoro-timer" id="pomodoro-timer">25:00</div>
+                    <div class="timer-controls">
+                        <button onclick="startPomodoro()">Start</button>
+                        <button onclick="pausePomodoro()">Pause</button>
+                        <button onclick="resetPomodoro()">Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Daily Schedule</h2>
+                <div class="task-input-group">
+                    <input type="text" id="event-title" placeholder="Event title">
+                    <input type="time" id="event-time">
+                    <button onclick="addTimeBlock()">Add Event</button>
+                </div>
+                <div id="schedule"></div>
+            </div>
+
+            <div class="card">
+                <h2>Habit Tracker</h2>
+                <div class="task-input-group">
+                    <input type="text" id="new-habit" placeholder="Enter a new habit">
+                    <button onclick="addHabit()">Add Habit</button>
+                </div>
+                <div id="habit-list"></div>
+            </div>
+
+            <div class="card">
+                <h2>Analytics</h2>
+                <canvas id="analytics-chart"></canvas>
+                <div id="analytics-summary" class="analytics-summary"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script>
+
+        // State management
+        let tasks = [];
+        let goals = [];
+        let events = [];
+        let habits = [];
+        let pomodoroInterval = null;
+let pomodoroTime = 25 * 60; // 25 minutes in seconds
+let isPomodoroActive = false;
+let isPomodoroPaused = false;
+
+function updatePomodoroDisplay() {
+    const minutes = Math.floor(pomodoroTime / 60);
+    const seconds = pomodoroTime % 60;
+    const display = document.getElementById('pomodoro-timer');
+    display.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+// Add these Pomodoro Timer functions right after updatePomodoroDisplay()
+function startPomodoro() {
+    if (!isPomodoroActive && !isPomodoroPaused) {
+        pomodoroTime = 25 * 60; // Reset to 25 minutes if starting fresh
+    }
+    
+    if (!isPomodoroActive) {
+        isPomodoroActive = true;
+        isPomodoroPaused = false;
+        pomodoroInterval = setInterval(() => {
+            if (pomodoroTime > 0) {
+                pomodoroTime--;
+                updatePomodoroDisplay();
+            } else {
+                // Timer completed
+                clearInterval(pomodoroInterval);
+                isPomodoroActive = false;
+                showNotification('Pomodoro session completed!');
+                playTimerEndSound();
+            }
+        }, 1000);
+    }
+}
+
+function pausePomodoro() {
+    if (isPomodoroActive) {
+        clearInterval(pomodoroInterval);
+        isPomodoroActive = false;
+        isPomodoroPaused = true;
+    }
+}
+
+function resetPomodoro() {
+    clearInterval(pomodoroInterval);
+    isPomodoroActive = false;
+    isPomodoroPaused = false;
+    pomodoroTime = 25 * 60;
+    updatePomodoroDisplay();
+}
+
+function playTimerEndSound() {
+    // Create and play a simple beep sound
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+    
+    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+    
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.5);
+}
+        
+        // Theme Toggle
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            localStorage.setItem('theme', currentTheme);
+            updateAnalytics(); // Refresh charts with new theme colors
+        }
+        
+        // Notifications
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // Task Management
+        
+        // Add a new task
+        function addTask() {
+            const taskInput = document.getElementById('new-task');
+            const categorySelect = document.getElementById('task-category');
+            
+            if (taskInput.value.trim() === '') {
+                showNotification('Task cannot be empty');
+                return;
+            }
+        
+            const task = {
+                id: Date.now(),
+                text: taskInput.value.trim(),
+                category: categorySelect.value,
+                completed: false,
+                createdAt: new Date()
+            };
+        
+            tasks.push(task);
+            renderTasks();
+            taskInput.value = '';
+            saveToLocalStorage();
+        }
+        
+        // Render all tasks
+        function renderTasks() {
+    const taskList = document.getElementById('task-list');
+    taskList.innerHTML = '';
+    
+    tasks.forEach(task => {
+        const taskElement = document.createElement('div');
+        taskElement.className = `task-item ${task.completed ? 'completed' : ''}`;
+        taskElement.id = `task-${task.id}`;  // Ensure unique ID for drag-and-drop
+
+        taskElement.innerHTML = `
+            <div>
+                <input type="checkbox" ${task.completed ? 'checked' : ''} 
+                       onchange="toggleTask(${task.id})">
+                <span class="${task.completed ? 'completed' : ''}">${task.text}</span>
+                <span class="badge">${task.category}</span>
+            </div>
+            <div>
+                <button onclick="editTask(${task.id})">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button onclick="deleteTask(${task.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+        
+        taskList.appendChild(taskElement);
+    });
+
+    // Initialize drag and drop after rendering tasks
+    initializeDragAndDrop();
+}
+
+        // Edit Task
+        function editTask(taskId) {
+            const task = tasks.find(task => task.id === taskId);
+            if (!task) return;
+        
+            const newText = prompt("Edit your task:", task.text);
+            if (newText && newText.trim() !== '') {
+                task.text = newText.trim();
+                renderTasks();  // Re-render the task list
+                saveToLocalStorage();  // Save the updated tasks to localStorage
+            }
+        }
+        
+        // Delete Task
+        function deleteTask(taskId) {
+            tasks = tasks.filter(task => task.id !== taskId);
+            renderTasks();  // Re-render the task list
+            saveToLocalStorage();  // Save the updated tasks to localStorage
+        }
+        
+        // Toggle Task Completion (Checkbox)
+        function toggleTask(taskId) {
+            const task = tasks.find(task => task.id === taskId);
+            if (task) {
+                task.completed = !task.completed;
+                renderTasks();  // Re-render the task list
+                saveToLocalStorage();  // Save the updated tasks to localStorage
+            }
+        }
+        // Drag and Drop Functionality
+function initializeDragAndDrop() {
+    const taskItems = document.querySelectorAll('.task-item');
+    const taskContainer = document.getElementById('task-list');
+
+    taskItems.forEach(task => {
+        task.setAttribute('draggable', true);
+        
+        task.addEventListener('dragstart', (e) => {
+            e.target.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', e.target.id);
+        });
+
+        task.addEventListener('dragend', (e) => {
+            e.target.classList.remove('dragging');
+        });
+    });
+
+    taskContainer.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const afterElement = getDragAfterElement(taskContainer, e.clientY);
+        const draggable = document.querySelector('.dragging');
+        
+        if (afterElement == null) {
+            taskContainer.appendChild(draggable);
+        } else {
+            taskContainer.insertBefore(draggable, afterElement);
+        }
+    });
+}
+
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.task-item:not(.dragging)')];
+
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+// Add a new goal
+function addGoal() {
+    const goalInput = document.getElementById('new-goal');
+    if (goalInput.value.trim() === '') {
+        showNotification('Goal cannot be empty');
+        return;
+    }
+
+    const goal = {
+        id: Date.now(),
+        text: goalInput.value.trim(),
+        progress: 0,
+        completed: false,
+        createdAt: new Date()
+    };
+
+    goals.push(goal);
+    renderGoals();
+    goalInput.value = '';
+    saveToLocalStorage();
+}
+
+// Render all goals
+function renderGoals() {
+    const goalList = document.getElementById('goal-list');
+    goalList.innerHTML = '';
+
+    goals.forEach(goal => {
+        const goalElement = document.createElement('div');
+        goalElement.className = `task-item ${goal.completed ? 'completed' : ''}`;
+        goalElement.innerHTML = `
+            <div>
+                <input type="checkbox" ${goal.completed ? 'checked' : ''} 
+                       onchange="toggleGoal(${goal.id})">
+                <span class="${goal.completed ? 'completed' : ''}">${goal.text}</span>
+                <div class="progress-bar">
+                    <div class="progress-bar-fill" style="width: ${goal.progress}%"></div>
+                </div>
+            </div>
+            <div>
+                <button onclick="updateGoalProgress(${goal.id})">
+                    <i class="fas fa-percentage"></i>
+                </button>
+                <button onclick="editGoal(${goal.id})">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button onclick="deleteGoal(${goal.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+        goalList.appendChild(goalElement);
+    });
+}
+
+// Toggle Goal Completion
+function toggleGoal(goalId) {
+    const goal = goals.find(goal => goal.id === goalId);
+    if (goal) {
+        goal.completed = !goal.completed;
+        // If goal is completed, set progress to 100%
+        if (goal.completed) {
+            goal.progress = 100;
+        }
+        renderGoals();
+        saveToLocalStorage();
+        showNotification(goal.completed ? 'Goal completed!' : 'Goal marked as in progress');
+    }
+}
+
+// Edit Goal
+function editGoal(goalId) {
+    const goal = goals.find(g => g.id === goalId);
+    if (!goal) {
+        showNotification('Goal not found');
+        return;
+    }
+
+    const newText = prompt("Edit your goal:", goal.text);
+    if (newText && newText.trim() !== '') {
+        goal.text = newText.trim();
+        renderGoals();
+        saveToLocalStorage();
+        showNotification('Goal updated successfully');
+    } else if (newText !== null) {
+        showNotification('Goal text cannot be empty');
+    }
+}
+
+// Delete Goal
+function deleteGoal(goalId) {
+    const goalIndex = goals.findIndex(g => g.id === goalId);
+    if (goalIndex === -1) {
+        showNotification('Goal not found');
+        return;
+    }
+
+    if (confirm('Are you sure you want to delete this goal?')) {
+        goals.splice(goalIndex, 1);
+        renderGoals();
+        saveToLocalStorage();
+        showNotification('Goal deleted successfully');
+    }
+}
+
+// Update Goal Progress
+function updateGoalProgress(goalId) {
+    const goal = goals.find(goal => goal.id === goalId);
+    if (!goal) {
+        showNotification('Goal not found');
+        return;
+    }
+
+    const newProgress = prompt("Enter progress percentage (0-100):", goal.progress);
+    const progressValue = parseInt(newProgress);
+    
+    if (!isNaN(progressValue) && progressValue >= 0 && progressValue <= 100) {
+        goal.progress = progressValue;
+        // If progress is 100%, mark as completed
+        if (progressValue === 100) {
+            goal.completed = true;
+        } else {
+            goal.completed = false;
+        }
+        renderGoals();
+        saveToLocalStorage();
+        showNotification(`Progress updated to ${progressValue}%`);
+    } else if (newProgress !== null) {
+        showNotification('Please enter a valid number between 0 and 100');
+    }
+}
+        // Add a new habit
+        function addHabit() {
+            const habitInput = document.getElementById('new-habit');
+            if (habitInput.value.trim() === '') {
+                showNotification('Habit cannot be empty');
+                return;
+            }
+
+            const habit = {
+                id: Date.now(),
+                text: habitInput.value.trim(),
+                completed: false,
+                createdAt: new Date()
+            };
+
+            habits.push(habit);
+            renderHabits();
+            habitInput.value = '';
+            saveToLocalStorage();
+        }
+
+        // Render all habits
+        function renderHabits() {
+            const habitList = document.getElementById('habit-list');
+            habitList.innerHTML = '';
+
+            habits.forEach(habit => {
+                const habitElement = document.createElement('div');
+                habitElement.className = `task-item ${habit.completed ? 'completed' : ''}`;
+                habitElement.innerHTML = `
+                    <div>
+                        <input type="checkbox" ${habit.completed ? 'checked' : ''} 
+                               onchange="toggleHabit(${habit.id})">
+                        <span class="${habit.completed ? 'completed' : ''}">${habit.text}</span>
+                    </div>
+                    <div>
+                        <button onclick="editHabit(${habit.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteHabit(${habit.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                habitList.appendChild(habitElement);
+            });
+        }
+
+        // Edit Habit
+        function editHabit(habitId) {
+            const habit = habits.find(habit => habit.id === habitId);
+            if (!habit) return;
+
+            const newText = prompt("Edit your habit:", habit.text);
+            if (newText && newText.trim() !== '') {
+                habit.text = newText.trim();
+                renderHabits();
+                saveToLocalStorage();
+            }
+        }
+
+        // Delete Habit
+        function deleteHabit(habitId) {
+            habits = habits.filter(habit => habit.id !== habitId);
+            renderHabits();
+            saveToLocalStorage();
+        }
+
+        // Toggle Habit Completion (Checkbox)
+        function toggleHabit(habitId) {
+            const habit = habits.find(habit => habit.id === habitId);
+            if (habit) {
+                habit.completed = !habit.completed;
+                renderHabits();
+                saveToLocalStorage();
+            }
+        }
+
+        // Add an event to the daily schedule
+        function addTimeBlock() {
+    const eventTitle = document.getElementById('event-title');
+    const eventTime = document.getElementById('event-time');
+    
+    if (eventTitle.value.trim() === '' || !eventTime.value) {
+        showNotification('Event title and time are required');
+        return;
+    }
+
+    const event = {
+        id: Date.now(),
+        title: eventTitle.value.trim(),
+        time: eventTime.value,
+        createdAt: new Date()
+    };
+
+    events.push(event);
+    events.sort((a, b) => a.time.localeCompare(b.time)); // Sort events by time
+    renderSchedule();
+    eventTitle.value = '';
+    eventTime.value = '';
+    updateAnalytics(); // Add analytics update
+    saveToLocalStorage();
+}
+
+        // Render the daily schedule
+        function renderSchedule() {
+            const schedule = document.getElementById('schedule');
+            schedule.innerHTML = '';
+
+            events.forEach(event => {
+                const eventElement = document.createElement('div');
+                eventElement.className = 'task-item';
+                eventElement.innerHTML = `
+                    <div>
+                        <span>${event.title} at ${event.time}</span>
+                    </div>
+                    <div>
+                        <button onclick="editEvent(${event.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteEvent(${event.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                schedule.appendChild(eventElement);
+            });
+        }
+
+        // Edit Event
+        function editEvent(eventId) {
+            const event = events.find(event => event.id === eventId);
+            if (!event) return;
+
+            const newTitle = prompt("Edit your event title:", event.title);
+            const newTime = prompt("Edit your event time:", event.time);
+            if (newTitle && newTime) {
+                event.title = newTitle.trim();
+                event.time = newTime.trim();
+                renderSchedule();
+                saveToLocalStorage();
+            }
+        }
+
+        // Delete Event
+        function deleteEvent(eventId) {
+            events = events.filter(event => event.id !== eventId);
+            renderSchedule();
+            saveToLocalStorage();
+        }
+
+        // Local Storage Functions
+        function saveToLocalStorage() {
+            const data = {
+                tasks,
+                goals,
+                events,
+                habits,
+                theme: currentTheme
+            };
+            localStorage.setItem('plannerData', JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage() {
+            const data = localStorage.getItem('plannerData');
+            if (data) {
+                const parsed = JSON.parse(data);
+                tasks = parsed.tasks || [];
+                goals = parsed.goals || [];
+                events = parsed.events || [];
+                habits = parsed.habits || [];
+                currentTheme = parsed.theme || 'light';
+                
+                if (currentTheme === 'dark') {
+                    document.body.classList.add('dark-mode');
+                }
+            }
+        }
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromLocalStorage();
+            renderTasks();
+            renderGoals();
+            renderSchedule();
+            renderHabits();
+        });
+// Analytics State
+let analyticsData = {
+    taskMetrics: {
+        completed: 0,
+        total: 0,
+        categoryBreakdown: {}
+    },
+    goalMetrics: {
+        averageProgress: 0,
+        totalGoals: 0
+    },
+    habitMetrics: {
+        streaks: {},
+        completionRate: 0
+    },
+    timeMetrics: {
+        busyHours: [],
+        productiveTime: 0
+    }
+};
+
+// Update analytics whenever data changes
+function updateAnalytics() {
+    // Reset metrics
+    analyticsData = {
+        taskMetrics: { completed: 0, total: 0, categoryBreakdown: {} },
+        goalMetrics: { averageProgress: 0, totalGoals: 0 },
+        habitMetrics: { streaks: {}, completionRate: 0 },
+        timeMetrics: { busyHours: [], productiveTime: 0 }
+    };
+
+    // Calculate task metrics
+    analyticsData.taskMetrics.total = tasks.length;
+    analyticsData.taskMetrics.completed = tasks.filter(task => task.completed).length;
+    
+    // Category breakdown
+    tasks.forEach(task => {
+        if (!analyticsData.taskMetrics.categoryBreakdown[task.category]) {
+            analyticsData.taskMetrics.categoryBreakdown[task.category] = 0;
+        }
+        analyticsData.taskMetrics.categoryBreakdown[task.category]++;
+    });
+
+    // Calculate goal metrics
+    analyticsData.goalMetrics.totalGoals = goals.length;
+    if (goals.length > 0) {
+        const totalProgress = goals.reduce((sum, goal) => sum + (goal.progress || 0), 0);
+        analyticsData.goalMetrics.averageProgress = totalProgress / goals.length;
+    }
+
+    // Calculate habit metrics
+    if (habits.length > 0) {
+        const completedHabits = habits.filter(habit => habit.completed).length;
+        analyticsData.habitMetrics.completionRate = (completedHabits / habits.length) * 100;
+    }
+
+    // Calculate time metrics from events
+    analyticsData.timeMetrics.busyHours = Array(24).fill(0); // Initialize array for all 24 hours
+    events.forEach(event => {
+        const hour = parseInt(event.time.split(':')[0]);
+        analyticsData.timeMetrics.busyHours[hour]++;
+    });
+
+    renderAnalytics();
+    saveToLocalStorage();
+}
+
+// Render analytics visualizations
+function updateAnalytics() {
+            // Calculate metrics
+            const taskMetrics = {
+                total: tasks.length,
+                completed: tasks.filter(t => t.completed).length,
+                completion_rate: tasks.length > 0 ? 
+                    (tasks.filter(t => t.completed).length / tasks.length) * 100 : 0
+            };
+
+            const goalMetrics = {
+                total: goals.length,
+                average_progress: goals.length > 0 ? 
+                    goals.reduce((acc, g) => acc + (g.progress || 0), 0) / goals.length : 0
+            };
+
+            const habitMetrics = {
+                total: habits.length,
+                completed: habits.filter(h => h.completed).length,
+                completion_rate: habits.length > 0 ? 
+                    (habits.filter(h => h.completed).length / habits.length) * 100 : 0
+            };
+
+            // Get the canvas context
+            const canvas = document.getElementById('analytics-chart');
+            if (!canvas) return;
+
+            // Clear existing chart if it exists
+            if (window.myChart) {
+                window.myChart.destroy();
+            }
+
+            // Create new chart
+            window.myChart = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: ['Tasks', 'Goals', 'Habits'],
+                    datasets: [{
+                        label: 'Completion Rate (%)',
+                        data: [
+                            taskMetrics.completion_rate,
+                            goalMetrics.average_progress,
+                            habitMetrics.completion_rate
+                        ],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.6)',
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(153, 102, 255, 0.6)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Update summary
+            const summaryDiv = document.getElementById('analytics-summary');
+            if (summaryDiv) {
+                summaryDiv.innerHTML = `
+                    <p>Tasks: ${taskMetrics.completed}/${taskMetrics.total} completed (${taskMetrics.completion_rate.toFixed(1)}%)</p>
+                    <p>Goals: Average progress ${goalMetrics.average_progress.toFixed(1)}%</p>
+                    <p>Habits: ${habitMetrics.completed}/${habitMetrics.total} completed (${habitMetrics.completion_rate.toFixed(1)}%)</p>
+                `;
+            }
+        }
+
+        // Ensure analytics gets updated whenever data changes
+        function saveToLocalStorage() {
+            const data = {
+                tasks,
+                goals,
+                events,
+                habits,
+                theme: currentTheme
+            };
+            localStorage.setItem('plannerData', JSON.stringify(data));
+            updateAnalytics(); // Add this line to update analytics when data changes
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromLocalStorage();
+            renderTasks();
+            renderGoals();
+            renderSchedule();
+            renderHabits();
+            updateAnalytics();
+        });
+    </script>        
+</body>
+</html>
