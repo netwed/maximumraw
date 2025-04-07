@@ -44,14 +44,27 @@
       color: #555;
     }
     .footer a { color: #0077cc; text-decoration: underline; }
+    
+    /* Add these styles to fix calendar positioning */
+    #calendar {
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .flatpickr-calendar {
+      position: absolute !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      max-width: 100%;
+    }
+    @media (max-width: 640px) {
+      .flatpickr-calendar {
+        left: 0 !important;
+        transform: none !important;
+        width: 100%;
+      }
+    }
   </style>
 </head>
-
-
-
-
-
-
 
 <body>
 
@@ -129,7 +142,10 @@
       onChange: function(selectedDates, dateStr) {
         selected.date = dateStr;
         updateButtonState();
-      }
+      },
+      // Optional: You can add this to ensure the calendar stays centered
+      position: "auto",
+      positionElement: calendarInput
     });
 
     emailInput.addEventListener('input', (e) => {
