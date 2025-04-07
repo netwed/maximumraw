@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Book Tech Help Time</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 600px;
+      margin: auto;
+      padding: 2rem;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .card {
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .grid { display: flex; flex-direction: column; gap: 0.5rem; }
+    button {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      cursor: pointer;
+    }
+    button.selected {
+      background-color: #333;
+      color: white;
+    }
+    input[type="email"] {
+      padding: 8px;
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid #aaa;
+    }
+    .footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #555;
+    }
+    .footer a { color: #0077cc; text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <h1>Book Tech Help Time</h1>
+
+  <div class="card">
+    <h2>1. Choose Your Time</h2>
+    <div class="grid" id="time-options"></div>
+  </div>
+
+  <div class="card">
+    <h2>2. Pick a Date</h2>
+    <input type="text" id="calendar" placeholder="Select a date" />
+  </div>
+
+  <div class="card">
+    <h2>3. Enter Your Email</h2>
+    <input type="email" id="email" placeholder="you@example.com" />
+  </div>
+
+  <div style="text-align:center">
+    <button id="checkoutBtn" disabled>Continue to Payment</button>
+  </div>
+
+  <p class="footer">
+    By booking, you agree to our
+    <a href="/privacy">Privacy Policy</a> and
+    <a href="/terms">Terms of Service</a>.
+    Questions? <a href="mailto:support@example.com">Email us</a>.
+  </p>
+
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://js.stripe.com/v3/"></script>
+  <script>
+    const timeOptions = [
+      { label: '30 Minutes - $50', value: 30, priceId: 'price_30min' },
+      { label: '1 Hour - $90', value: 60, priceId: 'price_1hour' },
+      { label: '2 Hours - $170', value: 120, priceId: 'price_2hour' },
+    ];
+
+    const selected = {
+      time: null,
+      date: null,
+      email: '',
+    };
+
+    const stripe = Stripe('your-publishable-key'); // Replace with your Stripe key
+
+    const timeContainer = document.getElementById('time-options');
+    const emailInput = document.getElementById('email');
+    const calendarInput = document.getElementById('calendar');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+
+    function updateButtonState() {
+      const isReady = selected.time && selected.date && selected.email;
+      checkoutBtn.disabled = !isReady;
+    }
+
+    // Render time buttons
+    timeOptions.forEach(option => {
+      const btn = document.createElement('button');
+      btn.textContent = option.label;
+      btn.onclick = () => {
+        document.querySelectorAll('#time-options button').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selected.time = option.value;
+        selected.priceId = option.priceId;
+        updateButtonState();
+      };
+      timeContainer.appendChild(btn);
+    });
+
+    // Setup calendar
+    flatpickr(calendarInput, {
+      onChange: function(selectedDates, dateStr) {
+        selected.date = dateStr;
+        updateButtonState();
+      }
+    });
+
+    emailInput.addEventListener('input', (e) => {
+      selected.email = e.target.value;
+      updateButtonState();
+    });
+
+    checkoutBtn.addEventListener('click', async () => {
+      checkoutBtn.textContent = 'Processing...';
+      checkoutBtn.disabled = true;
+
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          time: selected.time,
+          email: selected.email,
+          date: selected.date,
+          priceId: selected.priceId
+        })
+      });
+
+      const { id } = await res.json();
+      await stripe.redirectToCheckout({ sessionId: id });
+    });
+  </script>
+</body>
+</html>
