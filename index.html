@@ -185,7 +185,42 @@
             <li><a href="/services/cloud">Cloud Solutions</a></li>
           </ul>
         </div>
-        
+            <!-- Booking Section -->
+    <section id="booking" class="booking" aria-labelledby="booking-heading">
+      <div class="container">
+        <h2 id="booking-heading" class="section-title">Book a Consultation</h2>
+        <p class="section-intro">Need help with cybersecurity, compliance, or tech strategy? Choose a time that works for you.</p>
+
+        <form class="booking-form" action="/submit-booking" method="POST">
+          <div class="form-group">
+            <label for="booking-name">Your Name</label>
+            <input type="text" id="booking-name" name="name" required>
+          </div>
+          <div class="form-group">
+            <label for="booking-email">Email Address</label>
+            <input type="email" id="booking-email" name="email" required>
+          </div>
+          <div class="form-group">
+            <label for="booking-service">Service</label>
+            <select id="booking-service" name="service" required>
+              <option value="">Select a service...</option>
+              <option value="30-min">30-Minute Consultation</option>
+              <option value="1-hour">1-Hour Deep Dive</option>
+              <option value="compliance">Canadian Compliance Guidance</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="booking-time">Preferred Time</label>
+            <input type="datetime-local" id="booking-time" name="time" required>
+          </div>
+          <div class="form-group">
+            <label for="booking-notes">Additional Notes</label>
+            <textarea id="booking-notes" name="notes" rows="4" placeholder="Tell us anything specific you'd like to discuss..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Book Now</button>
+        </form>
+      </div>
+    </section>
         <div class="footer-contact">
           <h3>Connect With Us</h3>
           <ul class="social-links">
