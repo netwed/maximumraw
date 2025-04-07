@@ -45,7 +45,7 @@
     }
     .footer a { color: #0077cc; text-decoration: underline; }
     
-    /* Add these styles to fix calendar positioning */
+    /* Calendar styling */
     #calendar {
       width: 100%;
       box-sizing: border-box;
@@ -54,7 +54,7 @@
       position: absolute !important;
       left: 50% !important;
       transform: translateX(-50%) !important;
-      max-width: 100%;
+      max-width: 50%;
     }
     @media (max-width: 640px) {
       .flatpickr-calendar {
@@ -71,13 +71,13 @@
   <h1>Book Tech Help Time</h1>
 
   <div class="card">
-    <h2>1. Choose Your Time</h2>
+    <h2>1. Choose Duration</h2>
     <div class="grid" id="time-options"></div>
   </div>
 
   <div class="card">
-    <h2>2. Pick a Date</h2>
-    <input type="text" id="calendar" placeholder="Select a date" />
+    <h2>2. Pick Date & Time</h2>
+    <input type="text" id="calendar" placeholder="Select date and time" />
   </div>
 
   <div class="card">
@@ -106,9 +106,10 @@
     ];
 
     const selected = {
-      time: null,
-      date: null,
+      duration: null,
+      datetime: null,
       email: '',
+      priceId: null
     };
 
     const stripe = Stripe('your-publishable-key'); // Replace with your Stripe key
@@ -119,31 +120,36 @@
     const checkoutBtn = document.getElementById('checkoutBtn');
 
     function updateButtonState() {
-      const isReady = selected.time && selected.date && selected.email;
+      const isReady = selected.duration && selected.datetime && selected.email;
       checkoutBtn.disabled = !isReady;
     }
 
-    // Render time buttons
+    // Render duration buttons
     timeOptions.forEach(option => {
       const btn = document.createElement('button');
       btn.textContent = option.label;
       btn.onclick = () => {
         document.querySelectorAll('#time-options button').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
-        selected.time = option.value;
+        selected.duration = option.value;
         selected.priceId = option.priceId;
         updateButtonState();
       };
       timeContainer.appendChild(btn);
     });
 
-    // Setup calendar
+    // Setup calendar with time picker
     flatpickr(calendarInput, {
+      enableTime: true,
+      dateFormat: "Y-m-d H:i",
+      minDate: "today",
+      minTime: "09:00",
+      maxTime: "17:00",
+      minuteIncrement: 30,
       onChange: function(selectedDates, dateStr) {
-        selected.date = dateStr;
+        selected.datetime = dateStr;
         updateButtonState();
       },
-      // Optional: You can add this to ensure the calendar stays centered
       position: "auto",
       positionElement: calendarInput
     });
@@ -161,9 +167,9 @@
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
-          time: selected.time,
+          duration: selected.duration,
           email: selected.email,
-          date: selected.date,
+          datetime: selected.datetime,
           priceId: selected.priceId
         })
       });
