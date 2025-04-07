@@ -1,126 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="MaximumRaw Inc. provides managed IT services, cybersecurity solutions, and data backup & recovery services for businesses.">
-  <title>MaximumRaw Inc. | Managed IT Services</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="icon" href="favicon.ico" type="image/x-icon">
-  <link rel="icon" href="/favicon.ico" sizes="16x16" type="image/x-icon">
-  <link rel="icon" href="/favicon.ico" sizes="32x32" type="image/x-icon">
-  <link rel="icon" href="favicon.ico" sizes="48x48" type="image/x-icon">
-  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
-  <link rel="icon" href="/favicon.ico" type="image/x-icon">
-  
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Book Tech Help Time</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 600px;
+      margin: auto;
+      padding: 2rem;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .card {
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .grid { display: flex; flex-direction: column; gap: 0.5rem; }
+    button {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      cursor: pointer;
+    }
+    button.selected {
+      background-color: #333;
+      color: white;
+    }
+    input[type="email"] {
+      padding: 8px;
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid #aaa;
+    }
+    .footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #555;
+    }
+    .footer a { color: #0077cc; text-decoration: underline; }
+  </style>
 </head>
-
 <body>
-  <header>
-    <nav class="navbar" aria-label="Main navigation">
-      <div class="logo">
-        <a href="/" aria-label="MaximumRaw Home">
-          <img src="logo.svg" alt="MaximumRaw Logo" width="150" height="40">
-        </a>
-      </div>
-      <button class="mobile-menu-toggle" aria-expanded="false" aria-controls="primary-menu" aria-label="Toggle menu">
-        <span class="sr-only">Menu</span>
-        <span class="hamburger"></span>
-      </button>
-      <ul id="primary-menu" class="nav-links">
-        <li><a href="#services">Services</a></li>
-        <li><a href="#about">About Us</a></li>
-        <li><a href="#testimonials">Testimonials</a></li>
-        <li><a href="#contact" class="nav-cta">Contact Us</a></li>
-      </ul>
-    </nav>
-  </header>
 
-  <main>
-    <!-- Hero Section -->
-    <section class="hero" aria-labelledby="hero-heading">
-      <div class="container">
-        <div class="hero-content">
-          <h1 id="hero-heading">Empowering Your Business with Next-Gen IT Solutions</h1>
-          <p class="hero-tagline">Secure, Scalable, and Smart.</p>
-          <div class="cta-buttons">
-            <a href="#contact" class="btn btn-primary">Get Your Free IT Audit</a>
-            <a href="#services" class="btn btn-secondary">Explore Our Services</a>
-          </div>
-        </div>
-      </div>
-    </section>
+  <h1>Book Tech Help Time</h1>
 
-    <!-- Services Section -->
-    <section id="services" class="services" aria-labelledby="services-heading">
-      <div class="container">
-        <h2 id="services-heading" class="section-title">Our Services</h2>
-        <div class="service-cards">
-          <!-- Service Cards here -->
-          <!-- ...existing cards... -->
-        </div>
-      </div>
-    </section>
+  <div class="card">
+    <h2>1. Choose Your Time</h2>
+    <div class="grid" id="time-options"></div>
+  </div>
 
-    <!-- Booking Section -->
-    <section id="booking" class="booking" aria-labelledby="booking-heading">
-      <div class="container">
-        <h2 id="booking-heading" class="section-title">Book a Consultation</h2>
-        <p class="section-intro">Need help with cybersecurity, compliance, or tech strategy? Choose a time that works for you.</p>
+  <div class="card">
+    <h2>2. Pick a Date</h2>
+    <input type="text" id="calendar" placeholder="Select a date" />
+  </div>
 
-        <form class="booking-form" action="/submit-booking" method="POST">
-          <div class="form-group">
-            <label for="booking-name">Your Name</label>
-            <input type="text" id="booking-name" name="name" required>
-          </div>
-          <div class="form-group">
-            <label for="booking-email">Email Address</label>
-            <input type="email" id="booking-email" name="email" required>
-          </div>
-          <div class="form-group">
-            <label for="booking-service">Service</label>
-            <select id="booking-service" name="service" required>
-              <option value="">Select a service...</option>
-              <option value="30-min">30-Minute Consultation</option>
-              <option value="1-hour">1-Hour Deep Dive</option>
-              <option value="compliance">Canadian Compliance Guidance</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="booking-time">Preferred Time</label>
-            <input type="datetime-local" id="booking-time" name="time" required>
-          </div>
-          <div class="form-group">
-            <label for="booking-notes">Additional Notes</label>
-            <textarea id="booking-notes" name="notes" rows="4" placeholder="Tell us anything specific you'd like to discuss..."></textarea>
-          </div>
-          <button type="submit" class="btn btn-primary">Book Now</button>
-        </form>
-      </div>
-    </section>
+  <div class="card">
+    <h2>3. Enter Your Email</h2>
+    <input type="email" id="email" placeholder="you@example.com" />
+  </div>
 
-    <!-- Contact Section -->
-    <section id="contact" class="contact" aria-labelledby="contact-heading">
-      <div class="container">
-        <h2 id="contact-heading" class="section-title">Contact Us</h2>
-        <div class="contact-container">
-          <!-- Contact Info and Form here -->
-          <!-- ...existing contact info and form... -->
-        </div>
-      </div>
-    </section>
-  </main>
+  <div style="text-align:center">
+    <button id="checkoutBtn" disabled>Continue to Payment</button>
+  </div>
 
-  <footer>
-    <div class="container">
-      <!-- Footer Content here -->
-      <!-- ...existing footer... -->
-    </div>
-  </footer>
+  <p class="footer">
+    By booking, you agree to our
+    <a href="/privacy">Privacy Policy</a> and
+    <a href="/terms">Terms of Service</a>.
+    Questions? <a href="mailto:support@example.com">Email us</a>.
+  </p>
 
-  <script src="script.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://js.stripe.com/v3/"></script>
+  <script>
+    const timeOptions = [
+      { label: '30 Minutes - $50', value: 30, priceId: 'price_30min' },
+      { label: '1 Hour - $90', value: 60, priceId: 'price_1hour' },
+      { label: '2 Hours - $170', value: 120, priceId: 'price_2hour' },
+    ];
+
+    const selected = {
+      time: null,
+      date: null,
+      email: '',
+    };
+
+    const stripe = Stripe('your-publishable-key'); // Replace with your Stripe key
+
+    const timeContainer = document.getElementById('time-options');
+    const emailInput = document.getElementById('email');
+    const calendarInput = document.getElementById('calendar');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+
+    function updateButtonState() {
+      const isReady = selected.time && selected.date && selected.email;
+      checkoutBtn.disabled = !isReady;
+    }
+
+    // Render time buttons
+    timeOptions.forEach(option => {
+      const btn = document.createElement('button');
+      btn.textContent = option.label;
+      btn.onclick = () => {
+        document.querySelectorAll('#time-options button').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selected.time = option.value;
+        selected.priceId = option.priceId;
+        updateButtonState();
+      };
+      timeContainer.appendChild(btn);
+    });
+
+    // Setup calendar
+    flatpickr(calendarInput, {
+      onChange: function(selectedDates, dateStr) {
+        selected.date = dateStr;
+        updateButtonState();
+      }
+    });
+
+    emailInput.addEventListener('input', (e) => {
+      selected.email = e.target.value;
+      updateButtonState();
+    });
+
+    checkoutBtn.addEventListener('click', async () => {
+      checkoutBtn.textContent = 'Processing...';
+      checkoutBtn.disabled = true;
+
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          time: selected.time,
+          email: selected.email,
+          date: selected.date,
+          priceId: selected.priceId
+        })
+      });
+
+      const { id } = await res.json();
+      await stripe.redirectToCheckout({ sessionId: id });
+    });
+  </script>
 </body>
 </html>
